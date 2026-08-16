@@ -58,11 +58,31 @@ Two moments are timed separately, because the window appears well before its art
 
 Per movie, cold time to dialog: 7.7→2.9, 4.3→2.3, 3.7→2.7, 4.9→2.5, 2.5→2.1.
 
-## What did not improve
+## What did not improve, on the desktop
 
-**The warm path is unchanged at 1.4s.** Warm has no network, so what remains is Kodi building roughly 700 ListItems and standing up the window. The indexed local-library matching, the de-quadratic'd crew merge and the set-based similar filter are all in that path and none of them are measurable here.
+**The warm path is unchanged at 1.4s.** Warm has no network, so what remains is Kodi building roughly 700 ListItems and standing up the window. The indexed local-library matching, the de-quadratic'd crew merge and the set-based similar filter are all in that path and none of them move that number.
 
-The cold improvement is therefore almost entirely connection reuse plus the parallel trailer checks, not the algorithmic work. The algorithmic changes remain defensible — upstream's local matching is O(items x library) and this desktop's library may be small — but they are unproven, and should not be claimed as the reason pages open faster.
+The cold improvement on the desktop is therefore connection reuse plus the parallel trailer checks, not the algorithmic work.
+
+## Why the desktop was the wrong place to judge that
+
+The local-library matching was briefly written off as unproven on the strength of the paragraph above. That was measuring the right code on the wrong machine.
+
+The same workload — one page of 45 items matched against the library — timed on all three devices, against a library of 1767 movies, which is what this install actually holds:
+
+| device | upstream scan | index build (once per session) | index lookup |
+|---|---|---|---|
+| desktop x86, Kodi 21.3 | 18.8 ms | 2.2 ms | 0.1 ms |
+| Bravia aarch64, Kodi 22 | 148 ms | 15 ms | 0.55 ms |
+| LibreELEC armv7 | 369 ms | 28 ms | 1.2 ms |
+
+And at 5000 movies on the LibreELEC box: 1059 ms of scanning per page, against an 87 ms one-off build and 1.2 ms per page.
+
+So on the slowest device at the real library size this is 369 ms of blocking Python per page, on the thread the UI is waiting on. Over the nine-page session that got Kodi killed, that is 3.3 seconds of scanning versus 39 ms indexed. On the desktop the same change saves 17 ms out of a 1400 ms page open — 1.2%, comfortably inside the noise, which is exactly why it looked like nothing.
+
+The ARM/x86 gap for this workload is about 8x on the Bravia and 20x on the LibreELEC box. Worth stating because a much larger figure circulates for Python on Kodi hardware; it does not hold here.
+
+The general lesson is the one worth keeping: a null result from the fastest machine available says nothing about the machines this add-on is actually used on.
 
 ## Image bandwidth
 
