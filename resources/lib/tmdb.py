@@ -33,8 +33,21 @@ IMAGE_BASE = "https://image.tmdb.org/t/p/"
     peak RSS of holding the decoded bitmap.
 
     The sizes below are chosen against what the control is actually drawn at on
-    a 1080p screen, with a margin: posters and backdrops comfortably exceed
-    Kodi's own cache ceiling, so nothing looks softer than it did.
+    a 1080p screen. Posters clear Kodi's 480x720 cache ceiling with room to
+    spare, so they cannot look softer than they did.
+
+    Backdrops need care, and an earlier version of this got it wrong. Kodi
+    caches fanart at 1920x1080, and TMDb's backdrop widths go w300, w780,
+    w1280, original -- there is nothing between w1280 and original. So w1280
+    for everything would have put the page's own background *below* display
+    resolution: a real, visible regression, not a free saving.
+
+    The split is therefore by role rather than by art type. The backdrop a page
+    shows as its own background stays `original`, which is one image and
+    matches upstream exactly. Backdrops belonging to *other* titles in a list --
+    similar films, collection members -- take w1280, and there are twenty-odd
+    of those. That keeps the saving where the count is without touching the
+    image anyone actually looks at.
 
     `grid` covers the browsable poster/backdrop lists, which are the worst case
     for memory because TMDb returns a hundred or more of them. Those list items
@@ -44,6 +57,7 @@ IMAGE_BASE = "https://image.tmdb.org/t/p/"
 IMAGE_SIZES = {
     "poster": "w780",
     "backdrop": "w1280",
+    "backdrop_hero": "original",
     "profile": "h632",
     "thumb": "w185",
     "still": "w300",
@@ -398,7 +412,9 @@ def tmdb_handle_person(item):
 
 def tmdb_handle_movie(item, local_items=None, full_info=False, mediatype="movie"):
     icon = image_url(item["poster_path"], "poster")
-    backdrop = image_url(item["backdrop_path"], "backdrop")
+    backdrop = image_url(
+        item["backdrop_path"], "backdrop_hero" if full_info else "backdrop"
+    )
 
     label = item["title"] or item["original_title"]
     originaltitle = item.get("original_title", "")
@@ -473,7 +489,7 @@ def tmdb_handle_movie(item, local_items=None, full_info=False, mediatype="movie"
             )
             list_item.setProperty(
                 "collection_fanart",
-                (image_url(collection["backdrop_path"], "backdrop")),
+                (image_url(collection["backdrop_path"], "backdrop_hero")),
             )
 
     return list_item, is_local
@@ -481,7 +497,9 @@ def tmdb_handle_movie(item, local_items=None, full_info=False, mediatype="movie"
 
 def tmdb_handle_tvshow(item, local_items=None, full_info=False, mediatype="tvshow"):
     icon = image_url(item["poster_path"], "poster")
-    backdrop = image_url(item["backdrop_path"], "backdrop")
+    backdrop = image_url(
+        item["backdrop_path"], "backdrop_hero" if full_info else "backdrop"
+    )
 
     label = item["name"] or item["original_name"]
     originaltitle = item.get("original_name", "")
@@ -578,7 +596,7 @@ def tmdb_handle_tvshow(item, local_items=None, full_info=False, mediatype="tvsho
 
 
 def tmdb_handle_season(item, tvshow_details, full_info=False):
-    backdrop = image_url(tvshow_details["backdrop_path"], "backdrop")
+    backdrop = image_url(tvshow_details["backdrop_path"], "backdrop_hero")
     icon = image_url(item["poster_path"], "poster")
     if not icon and tvshow_details["poster_path"]:
         icon = image_url(tvshow_details["poster_path"], "poster")
