@@ -3,9 +3,12 @@
 
 ########################
 
+import gc
 import sys
 import xbmc
 import xbmcgui
+
+from collections import OrderedDict
 
 from resources.lib.helper import *
 from resources.lib.tmdb import *
@@ -16,12 +19,36 @@ from resources.lib.localdb import *
 
 ########################
 
+""" How many visited pages stay instantiated at once.
+
+    Every live dialog holds its whole page of artwork as GPU textures, so this
+    is the knob that decides the add-on's ceiling rather than a tuning
+    preference. Measured on an Android TV box (Kodi 22, Mali GPU), one movie
+    page costs roughly 140 MB of GPU memory and 200 MB of process RSS.
+
+    Upstream kept every page forever, in three places at once -- dialog_cache,
+    window_stack, and the frames of a dialog_manager that recursed instead of
+    looping. Seven pages measured 983 MB of GPU memory against a 46 MB idle
+    baseline, and 2.1 GB RSS against 582 MB; the kernel OOM killer took Kodi at
+    nine pages. Three keeps instant Back for the pages a user actually bounces
+    between while leaving the ceiling under half a gigabyte.
+"""
+MAX_LIVE_DIALOGS = 3
+
 
 class TheMovieDB(object):
     def __init__(self, call, params):
         self.monitor = xbmc.Monitor()
-        self.window_stack = []
-        self.dialog_cache = {}
+        """ Navigation history holds (call, tmdb_id, season) descriptors, not
+            live dialogs. Depth is then free: an hour of browsing costs a list
+            of tuples. Going back re-derives the page, which normally needs no
+            network because the TMDb response is still in simplecache.
+        """
+        self.history = []
+        """ Live dialogs, most-recently-used last via move_to_end, bounded by
+            trim_cache to MAX_LIVE_DIALOGS.
+        """
+        self.dialog_cache = OrderedDict()
         self.call = call
         self.tmdb_id = params.get("tmdb_id")
         self.season = params.get("season")
@@ -166,13 +193,37 @@ class TheMovieDB(object):
     """
 
     def entry_point(self):
+        dialog = self.build_dialog()
+
+        if dialog:
+            self.dialog_manager(dialog)
+        else:
+            self.quit()
+
+    @staticmethod
+    def request_key(call, tmdb_id, season):
+        """Cache key for one page.
+
+        Upstream had two spellings of this and they disagreed: entry_point
+        wrote `call + id` while dialog_manager looked up `call + id + season`,
+        so every season page missed its own cache entry and was refetched.
+        """
+        return "%s%s%s" % (call, tmdb_id, season if season else "")
+
+    def build_dialog(self):
+        """Fetch the data for the current call/tmdb_id/season and build its dialog.
+
+        Returns the dialog, or None when TMDb had nothing. Deliberately does
+        not open it -- dialog_manager owns the navigation loop, so that
+        building a page never nests inside showing one.
+        """
         self.call_params["call"] = self.call
         self.call_params["tmdb_id"] = self.tmdb_id
         self.call_params["season"] = self.season
-        self.request = self.call + str(self.tmdb_id)
 
         busydialog()
 
+        dialog = None
         if self.call == "person":
             dialog = self.fetch_person()
         elif self.call == "tv" and self.season:
@@ -182,17 +233,39 @@ class TheMovieDB(object):
 
         busydialog(close=True)
 
-        """ Open next dialog if information has been found. If not open the previous dialog again.
-        """
         if dialog:
-            self.dialog_cache[self.request] = dialog
-            self.dialog_manager(dialog)
+            self.cache_dialog(
+                self.request_key(self.call, self.tmdb_id, self.season), dialog
+            )
 
-        elif self.window_stack:
-            self.dialog_history()
+        return dialog
 
-        else:
-            self.quit()
+    def cache_dialog(self, key, dialog):
+        self.dialog_cache[key] = dialog
+        self.dialog_cache.move_to_end(key)
+        self.trim_cache()
+
+    def trim_cache(self):
+        """Drop the least recently used dialogs past MAX_LIVE_DIALOGS.
+
+        Nothing is closed here -- an evicted dialog is not on screen. What
+        matters is that no Python reference survives, because the C++
+        CGUIWindow and every texture its controls hold stay alive until the
+        binding object is collected.
+
+        The explicit collect is not decoration. Eviction happens while a modal
+        loop is running, so without it the free waits for whenever CPython next
+        runs a generational sweep -- which on an idle dialog can be a long time,
+        and the whole point is to hand the memory back before the next page
+        allocates its own.
+        """
+        evicted = False
+        while len(self.dialog_cache) > MAX_LIVE_DIALOGS:
+            self.dialog_cache.popitem(last=False)
+            evicted = True
+
+        if evicted:
+            gc.collect()
 
     def fetch_person(self):
         data = TMDBPersons(self.call_params)
@@ -254,65 +327,105 @@ class TheMovieDB(object):
         )
         return dialog
 
-    """ Dialog handler. Creates the window history, reopens dialogs from a stack
-        or cache and is responsible for keeping the script alive.
+    """ Dialog handler. Owns the navigation history and keeps the script alive
+        for as long as a page is on screen.
     """
 
     def dialog_manager(self, dialog):
-        dialog.doModal()
+        """Show pages until the user leaves the add-on.
 
-        try:
-            next_id = dialog["id"]
-            next_call = dialog["call"]
-            next_season = dialog["season"]
+        This is a loop, and that is the point. Upstream recursed: each step
+        called dialog_manager() or entry_point() from inside the frame of the
+        page you were leaving, so every page ever visited stayed reachable from
+        the Python stack -- pinned there even if the caches around it were
+        trimmed. Depth was bounded only by CPython's recursion limit and, in
+        practice, by the OS killing Kodi first.
+        """
+        while dialog is not None and not self.monitor.abortRequested():
+            dialog.doModal()
+
+            try:
+                next_id = dialog["id"]
+                next_call = dialog["call"]
+                next_season = dialog["season"]
+            except KeyError:
+                # doModal returned without any dialog setting an action. Every
+                # exit path in the three dialog classes sets all three keys
+                # together, so this means something unforeseen -- leave.
+                break
 
             if next_call == "youtube":
-                while (
-                    condition(
-                        "Player.HasMedia | Window.IsVisible(busydialog) | Window.IsVisible(busydialognocancel) | Window.IsVisible(okdialog)"
-                    )
-                    and not self.monitor.abortRequested()
-                ):
-                    self.monitor.waitForAbort(1)
-
-                # reopen dialog after playback ended
-                self.dialog_manager(dialog)
+                self.wait_for_playback()
+                """ Reopen the same page. The action has to be cleared first or
+                    the next pass reads this same 'youtube' and spins forever;
+                    upstream never hit that because its recursive call did not
+                    return.
+                """
+                dialog.action.clear()
+                continue
 
             if next_call == "back":
-                self.dialog_history()
+                dialog = self.previous_dialog()
+                continue
 
-            if next_call == "close":
-                raise Exception
+            if next_call == "close" or not next_id or not next_call:
+                break
 
-            if not next_id or not next_call:
-                raise Exception
+            """ Remember the page being left as a descriptor, then move on. The
+                dialog itself is released once it falls out of dialog_cache.
+            """
+            self.history.append((self.call, self.tmdb_id, self.season))
+            dialog = self.dialog_for(next_call, next_id, next_season)
 
-            self.window_stack.append(dialog)
-            self.tmdb_id = next_id
-            self.call = next_call
-            self.season = next_season
-            self.request = next_call + str(next_id) + str(next_season)
+        self.quit()
 
-            if self.dialog_cache.get(self.request):
-                dialog = self.dialog_cache[self.request]
-                self.dialog_manager(dialog)
-            else:
-                self.entry_point()
+    def dialog_for(self, call, tmdb_id, season):
+        """The dialog for one page, from cache if it is still live."""
+        self.call = call
+        self.tmdb_id = tmdb_id
+        self.season = season
 
-        except Exception:
-            self.quit()
+        key = self.request_key(call, tmdb_id, season)
+        cached = self.dialog_cache.get(key)
 
-    def dialog_history(self):
-        if self.window_stack:
-            dialog = self.window_stack.pop()
-            self.dialog_manager(dialog)
-        else:
-            self.quit()
+        if cached is not None:
+            self.dialog_cache.move_to_end(key)
+            return cached
+
+        return self.build_dialog()
+
+    def previous_dialog(self):
+        """Step back through the history until a page can be shown."""
+        while self.history:
+            call, tmdb_id, season = self.history.pop()
+            dialog = self.dialog_for(call, tmdb_id, season)
+
+            if dialog is not None:
+                return dialog
+
+        return None
+
+    def wait_for_playback(self):
+        while (
+            condition(
+                "Player.HasMedia | Window.IsVisible(busydialog) | Window.IsVisible(busydialognocancel) | Window.IsVisible(okdialog)"
+            )
+            and not self.monitor.abortRequested()
+        ):
+            self.monitor.waitForAbort(1)
 
     def quit(self):
-        del self.call_params
-        del self.window_stack
-        del self.dialog_cache
+        """Release every page before handing back to Kodi.
+
+        Upstream deleted the attributes, which was not the same thing: the
+        dialogs were still reachable from the recursion, so what actually
+        freed them was the interpreter being torn down. Clearing the
+        containers here is what makes the release happen while the script
+        is still the one holding the references.
+        """
+        self.history = []
+        self.dialog_cache.clear()
+        gc.collect()
         quit()
 
 
