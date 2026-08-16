@@ -1,0 +1,6 @@
+v2.1.0
+- Fork of sualfred's Embuary Info, based on the unreleased upstream 2.0.10 (20 commits past the released 2.0.8).
+- Fixed unbounded memory growth while browsing. Every page visited in a session stayed resident, so a long session could push Kodi into an out-of-memory kill. Measured on an Android TV box: seven pages held 983 MB of GPU memory and 2.1 GB total, against a 46 MB / 582 MB idle baseline.
+- Artwork is requested at a size the display can actually use instead of TMDb's "original", which Kodi was downscaling anyway.
+- Faster page loads: a shared HTTP connection, parallel and time-bounded trailer checks, indexed local-library matching, and several quadratic loops removed.
+- Fixed a crash in date_year() when a date failed to parse, and an inverted error check that reported "not found" when results had in fact been found.

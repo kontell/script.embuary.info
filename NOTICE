@@ -1,0 +1,38 @@
+Embuary Info
+Copyright (c) sualfred and the Embuary Info contributors
+
+This product includes software developed by sualfred
+(https://github.com/sualfred/script.embuary.info), licensed under the
+Apache License, Version 2.0.
+
+--------------------------------------------------------------------------
+Modifications by Kontell
+--------------------------------------------------------------------------
+
+This is a fork, maintained at https://github.com/kontell/script.embuary.info.
+It keeps the upstream add-on id `script.embuary.info` so that it upgrades an
+existing install in place; it is not endorsed by or affiliated with the
+original author. Please report issues against the Kontell repository.
+
+Section 4(b) of the License requires that modified files carry prominent
+notice of the changes. The whole tree is modified relative to upstream (it was
+reformatted with black), so rather than annotate every file, the substantive
+changes are recorded here and in changelog.txt:
+
+  * Forked from the upstream `matrix` branch at 2.0.10 (commit f4e1f02), which
+    is 20 commits beyond the released 2.0.8 and was never published.
+  * Bounded the dialog stack and cache in resources/lib/main.py. Upstream kept
+    every visited page resident in `dialog_cache`, `window_stack` and the
+    recursion frames of `dialog_manager`, so a long browsing session grew
+    without limit until the OS killed Kodi.
+  * Artwork URLs now request a TMDb size variant appropriate to the target,
+    rather than `original` for everything.
+  * Reduced page-load latency: a shared requests.Session, parallel and
+    time-bounded YouTube trailer checks, indexed local-library matching, and
+    the removal of several quadratic loops.
+  * Fixed defects in helper.date_year() (UnboundLocalError), the inverted
+    `show_error` test in tmdb.tmdb_query(), and duplicated de_DE metadata in
+    addon.xml.
+  * Replaced upstream's GitHub Actions with the Kontell add-on CI shape, and
+    removed addon-submitter.yml, which submitted releases to the official Kodi
+    add-on repository.
