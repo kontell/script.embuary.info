@@ -8,6 +8,8 @@ import sys
 import requests
 import xml.etree.ElementTree as ET
 
+from urllib.parse import quote
+
 from resources.lib.helper import *
 
 ########################
@@ -25,10 +27,17 @@ def omdb_api(imdbnumber=None, title=None, year=None, content_type=None):
         )
 
     elif title and year and content_type:
-        # urllib has issues with some asian letters
+        """Currently unreachable -- the only caller passes an imdbnumber --
+        and broken twice over if it ever were reached: `urllib.quote` is
+        the Python 2 spelling, and this module never imported urllib at
+        all, so it would have raised NameError rather than the KeyError
+        being caught. Repaired instead of deleted because the branch is a
+        documented entry point, and left dead code is a landmine for
+        whoever wires it up next.
+        """
         try:
-            title = urllib.quote(title)
-        except KeyError:
+            title = quote(title)
+        except Exception:
             return
 
         url = (
