@@ -1,4 +1,19 @@
-# script.embuary.info
+# script.embuary.info — Kontell fork
+
+> This is a fork of [sualfred/script.embuary.info](https://github.com/sualfred/script.embuary.info), which has been unmaintained since May 2022. **Please report issues here, not to the original author.** Everything below this box is upstream's documentation and still applies.
+>
+> It keeps the upstream add-on id, so Kodi treats it as an in-place upgrade — but only for users who have set **Settings → System → Add-ons → Update official add-ons from** to *Any repositories*. On the default setting Kodi keeps upstream's 2.0.8 and never sees this build. The id is also what `context.embuary.info` imports and what skin.contuary references, so it could not change regardless.
+>
+> Distributed through the [Kontell repository](https://github.com/kontell/repository.kontell).
+>
+> **What is different**
+>
+> * **Browsing many pages no longer grows Kodi's memory without limit.** Upstream kept every page you visited instantiated — in the dialog cache, in the window stack, and in the frames of a navigation function that recursed rather than looped. On an Android TV box, seven pages held 983 MB of GPU memory and 2.1 GB RSS against a 46 MB / 582 MB idle baseline; nine pages was enough for the kernel to kill Kodi outright, with nothing in `kodi.log` to say why. This is upstream [issue #93](https://github.com/sualfred/script.embuary.info/issues/93), closed *not planned*. At most three pages now stay resident; going back further rebuilds from cache.
+> * **Artwork is requested at a size the screen can use.** Upstream asked TMDb for `original` everywhere, including cast thumbnails and studio logos, and Kodi then downscaled them to 480x720. Opening a full-screen image still uses the original.
+> * **Faster page loads.** Trailer liveness checks run in parallel with a timeout instead of one at a time with none; HTTP connections are reused; the local library is indexed once instead of rescanned for every item on the page.
+> * **Bug fixes**, including a crash in `date_year()` on an unparseable date and an inverted check that reported "nothing found" whenever something *was* found.
+>
+> Based on upstream's unreleased `matrix` branch (2.0.10), so it also carries the translation and language-folder fixes that never shipped to the Kodi repository.
 
 Script to provide skinners the option to call The Movie DB for actor and video infos.
 Unlike ExtendedInfo it requires a skin integration and it does not include a browser and it only crawls for the most basic and required information.
