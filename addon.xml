@@ -52,7 +52,7 @@
   dialog resident. Measured on an Android TV box, seven pages held 983 MB of
   GPU memory and 2.1 GB total; the stack is now bounded.
 - Artwork is requested at a size the display can use instead of TMDb's
-  "original", cutting image bandwidth and decode cost substantially.
+  "original": 4.0 MB to open a page instead of 20.0 MB.
 - Faster page loads: connection reuse, parallel trailer checks, and indexed
   local-library matching instead of a linear scan per item.
 </news>
