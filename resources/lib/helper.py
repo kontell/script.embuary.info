@@ -14,6 +14,7 @@ import os
 import operator
 import arrow
 import sys
+import requests
 import simplecache
 import hashlib
 
@@ -30,6 +31,36 @@ DEBUG = xbmc.LOGDEBUG
 ERROR = xbmc.LOGERROR
 
 DIALOG = xbmcgui.Dialog()
+
+""" One HTTP session for the whole script run.
+
+    Upstream called `requests.get`/`requests.head` directly, and each of those
+    builds a throwaway Session: new TCP connection, new TLS handshake, torn
+    down again immediately. A single movie page makes several TMDb calls, an
+    OMDb call, and one HEAD per trailer -- twenty-odd handshakes to two or
+    three hosts, all of which keep-alive would have collapsed into a couple of
+    connections.
+
+    That is worth far more on the devices this add-on runs on than on a
+    desktop: a TLS handshake on a low-end ARM SoC is tens of milliseconds of
+    real CPU, not a rounding error.
+
+    max_retries stays 0 because the callers already implement their own retry
+    with a delay between attempts, and stacking urllib3's retries underneath
+    would multiply the worst-case wait rather than bound it.
+"""
+SESSION = requests.Session()
+_ADAPTER = requests.adapters.HTTPAdapter(
+    pool_connections=4, pool_maxsize=8, max_retries=0
+)
+SESSION.mount("https://", _ADAPTER)
+SESSION.mount("http://", _ADAPTER)
+
+""" Every outbound request gets a deadline. Upstream's trailer check had none
+    at all, so a single unresponsive host could hang the dialog indefinitely --
+    with the busy dialog up and no way out.
+"""
+HTTP_TIMEOUT = 5
 
 COUNTRY_CODE = ADDON.getSettingString("country_code")
 DEFAULT_LANGUAGE = ADDON.getSettingString("language_code")
@@ -170,16 +201,23 @@ def winprop(key, value=None, clear=False, window_id=10000):
 
 
 def date_year(value):
+    """Year as a string, or '' if the value will not parse.
+
+    Upstream assigned `year` inside the try and returned it after an `except:
+    pass`, so any unparseable date raised UnboundLocalError out of a function
+    whose whole purpose was to swallow bad input. It reached a release because
+    the only caller passes TMDb birthday and deathday strings, which are
+    usually well formed and are usually empty when they are not -- and empty
+    returns on the line above.
+    """
     if not value:
         return value
 
     try:
-        year = str(arrow.get(value).year)
+        return str(arrow.get(value).year)
 
     except Exception:
-        pass
-
-    return year
+        return ""
 
 
 def date_format(value, date="short"):

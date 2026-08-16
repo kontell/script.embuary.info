@@ -8,6 +8,9 @@ import xbmc
 import xbmcgui
 import requests
 
+from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
+
 from resources.lib.helper import *
 from resources.lib.tmdb import *
 
@@ -17,7 +20,74 @@ SIMILAR_FILTER = ADDON.getSettingBool("similar_movies_filter")
 FILTER_UPCOMING = ADDON.getSettingBool("filter_upcoming")
 FILTER_DAYDELTA = int(ADDON.getSetting("filter_daydelta"))
 
+""" Concurrency for the trailer liveness check. These are latency-bound HEAD
+    requests to one host, so a small pool saturates the useful parallelism;
+    going wider mostly annoys YouTube.
+"""
+YT_CHECK_WORKERS = 8
+
+""" Crew jobs worth showing, and the order their departments appear in. Both
+    were inline in get_crew; the department order is load-bearing, so it is
+    named rather than implied by the order of four near-identical loops.
+"""
+CREDITED_JOBS = frozenset(
+    (
+        "Creator",
+        "Director",
+        "Producer",
+        "Screenplay",
+        "Writer",
+        "Original Music Composer",
+        "Novel",
+        "Storyboard",
+        "Executive Producer",
+        "Comic Book",
+    )
+)
+CREW_DEPARTMENTS = ("Directing", "Writing", "Production", "Sound")
+
 ########################
+
+
+def filter_live_videos(videos):
+    """Drop trailers whose YouTube thumbnail is gone.
+
+    Upstream checked these one at a time, with no timeout and a fresh
+    connection per video. A title with twenty trailers meant twenty sequential
+    round trips before the page could open, and any one unresponsive host hung
+    the dialog indefinitely behind a busy spinner with no way out. It was the
+    largest fixed cost in opening a movie page.
+
+    Two deliberate choices here:
+
+    A check that errors or times out keeps the video rather than dropping it.
+    Showing one dead trailer is a far smaller harm than silently hiding every
+    working one because the network hiccuped -- and upstream's version did
+    exactly that, since an exception propagated out and lost the whole list.
+
+    The shared SESSION is used across the pool. requests.Session is documented
+    as not thread-safe, but what that warns about is concurrent mutation of
+    session state; the connection pool underneath is thread-safe, and these
+    requests only read. Nothing here sets headers, auth or cookies.
+    """
+    if not videos:
+        return []
+
+    def alive(item):
+        try:
+            request = SESSION.head(
+                "https://img.youtube.com/vi/%s/0.jpg" % str(item["key"]),
+                timeout=HTTP_TIMEOUT,
+            )
+            return request.status_code == requests.codes.ok
+
+        except Exception:
+            return True
+
+    with ThreadPoolExecutor(max_workers=min(YT_CHECK_WORKERS, len(videos))) as pool:
+        results = list(pool.map(alive, videos))
+
+    return [item for item, ok in zip(videos, results) if ok]
 
 
 class TMDBVideos(object):
@@ -54,7 +124,7 @@ class TMDBVideos(object):
             )
             self.crew = self.details["credits"]["crew"]
             self.details["crew"] = self.crew
-            self.similar_duplicate_handler = list()
+            self.similar_duplicate_handler = set()
 
             self.result["details"] = self.get_details()
             self.result["cast"] = self.get_cast()
@@ -94,71 +164,59 @@ class TMDBVideos(object):
         return li
 
     def get_crew(self):
-        li_clean_crew = list()
-        li_crew_duplicate_handler_id = list()
-        li = list()
+        """Credited crew, deduplicated and grouped by department.
 
-        """ Add creators to crew
+        Same output as upstream, without the quadratic behaviour. Upstream
+        tested membership against a list and then rescanned the accumulated
+        list to find the duplicate it had just detected, so a title with a
+        hundred crew entries did on the order of ten thousand comparisons; it
+        then walked the result four more times, once per department. A dict
+        does the dedup in one pass and the departments are bucketed in one
+        more, with the order of both departments and members preserved.
+        """
+        by_id = OrderedDict()
+
+        """ Creators first, so they lead the Directing bucket.
         """
         for item in self.created_by:
             item["job"] = "Creator"
             item["department"] = "Directing"
-            li_clean_crew.append(item)
-            li_crew_duplicate_handler_id.append(item["id"])
+            by_id.setdefault(item["id"], item)
 
-        """ Filter crew and merge duplicate crew members if they were responsible for different jobs
-        """
         for item in self.crew:
-            if item["job"] in [
-                "Creator",
-                "Director",
-                "Producer",
-                "Screenplay",
-                "Writer",
-                "Original Music Composer",
-                "Novel",
-                "Storyboard",
-                "Executive Producer",
-                "Comic Book",
-            ]:
-                if item["id"] not in li_crew_duplicate_handler_id:
-                    li_clean_crew.append(item)
-                    li_crew_duplicate_handler_id.append(item["id"])
-                else:
-                    for duplicate in li_clean_crew:
-                        if duplicate["id"] == item["id"]:
-                            duplicate["job"] = duplicate["job"] + " / " + item["job"]
+            if item["job"] not in CREDITED_JOBS:
+                continue
 
-        """ Sort crew output based on department
-        """
-        for item in li_clean_crew:
-            if item["department"] == "Directing":
-                item["label2"] = item.get("job", "")
-                list_item = tmdb_handle_credits(item)
-                li.append(list_item)
+            existing = by_id.get(item["id"])
 
-        for item in li_clean_crew:
-            if item["department"] == "Writing":
-                item["label2"] = item.get("job", "")
-                list_item = tmdb_handle_credits(item)
-                li.append(list_item)
+            if existing is None:
+                by_id[item["id"]] = item
+            else:
+                """Same person, another job -- merge the titles rather than
+                listing them twice.
+                """
+                existing["job"] = existing["job"] + " / " + item["job"]
 
-        for item in li_clean_crew:
-            if item["department"] == "Production":
-                item["label2"] = item.get("job", "")
-                list_item = tmdb_handle_credits(item)
-                li.append(list_item)
+        buckets = {department: [] for department in CREW_DEPARTMENTS}
 
-        for item in li_clean_crew:
-            if item["department"] == "Sound":
-                item["job"] = (
-                    "Music Composer"
-                    if item["job"] == "Original Music Composer"
-                    else item["job"]
-                )
-                item["label2"] = item.get("job", "")
-                list_item = tmdb_handle_credits(item)
-                li.append(list_item)
+        for item in by_id.values():
+            bucket = buckets.get(item["department"])
+
+            if bucket is None:
+                continue
+
+            if (
+                item["department"] == "Sound"
+                and item["job"] == "Original Music Composer"
+            ):
+                item["job"] = "Music Composer"
+
+            item["label2"] = item.get("job", "")
+            bucket.append(tmdb_handle_credits(item))
+
+        li = list()
+        for department in CREW_DEPARTMENTS:
+            li.extend(buckets[department])
 
         return li
 
@@ -204,12 +262,12 @@ class TMDBVideos(object):
                     li.append(list_item)
 
                     if SIMILAR_FILTER:
-                        self.similar_duplicate_handler.append(item["id"])
+                        self.similar_duplicate_handler.add(item["id"])
 
             """ Don't show sets with only 1 item
             """
             if len(li) == 1:
-                self.similar_duplicate_handler = list()
+                self.similar_duplicate_handler = set()
                 li = list()
 
         return li
@@ -298,17 +356,7 @@ class TMDBVideos(object):
                 videos_en = videos_en.get("results")
                 videos = videos + videos_en
 
-            """ Check online status of all videos to prevent dead links
-            """
-            online_videos = []
-            for item in videos:
-                request = requests.head(
-                    "https://img.youtube.com/vi/%s/0.jpg" % str(item["key"])
-                )
-                if request.status_code == requests.codes.ok:
-                    online_videos.append(item)
-
-            videos = online_videos
+            videos = filter_live_videos(videos)
             write_cache(cache_key, videos)
 
         for item in videos:

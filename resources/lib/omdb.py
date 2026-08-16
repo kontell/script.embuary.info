@@ -48,7 +48,7 @@ def omdb_api(imdbnumber=None, title=None, year=None, content_type=None):
 
         for i in range(1, 4):  # loop if heavy server load
             try:
-                request = requests.get(url, timeout=5)
+                request = SESSION.get(url, timeout=HTTP_TIMEOUT)
 
                 if not request.ok:
                     raise Exception(str(request.status_code))

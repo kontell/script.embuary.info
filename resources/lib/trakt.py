@@ -26,7 +26,7 @@ def trakt_api(call=None):
 
     for i in range(1, 4):  # loop if heavy server load
         try:
-            request = requests.get(request_url, timeout=5, headers=headers)
+            request = SESSION.get(request_url, timeout=HTTP_TIMEOUT, headers=headers)
 
             if not request.ok:
                 raise Exception(str(request.status_code))

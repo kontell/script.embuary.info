@@ -19,7 +19,51 @@ from resources.lib.localdb import *
 
 API_KEY = ADDON.getSettingString("tmdb_api_key")
 API_URL = "https://api.themoviedb.org/3/"
-IMAGEPATH = "https://image.tmdb.org/t/p/original"
+IMAGE_BASE = "https://image.tmdb.org/t/p/"
+
+""" TMDb pre-renders every image at a handful of widths and upstream asked for
+    `original` at all eighteen call sites -- cast thumbnails, studio logos and
+    episode stills included.
+
+    That is pure waste, and the add-on's own logs prove it: Kodi caches these
+    at 480x720 for posters and 1920x1080 for fanart, so a 2000x3000 original
+    poster is downloaded in full, decoded in full, and then thrown away down to
+    a sixth of its area. The cost is paid three times -- bandwidth, a
+    full-resolution decode on a CPU that is usually a low-end ARM part, and the
+    peak RSS of holding the decoded bitmap.
+
+    The sizes below are chosen against what the control is actually drawn at on
+    a 1080p screen, with a margin: posters and backdrops comfortably exceed
+    Kodi's own cache ceiling, so nothing looks softer than it did.
+
+    `grid` covers the browsable poster/backdrop lists, which are the worst case
+    for memory because TMDb returns a hundred or more of them. Those list items
+    also carry the original URL in a property, so opening one full screen still
+    shows full quality -- see FullScreenImage in main.py.
+"""
+IMAGE_SIZES = {
+    "poster": "w780",
+    "backdrop": "w1280",
+    "profile": "h632",
+    "thumb": "w185",
+    "still": "w300",
+    "logo": "w300",
+    "grid": "w500",
+    "original": "original",
+}
+
+
+def image_url(path, kind="poster"):
+    """Absolute URL for a TMDb image path, at the size `kind` calls for.
+
+    Returns '' for a missing path, which is what every call site wants -- TMDb
+    uses null rather than omitting the key.
+    """
+    if not path:
+        return ""
+
+    return IMAGE_BASE + IMAGE_SIZES.get(kind, "original") + path
+
 
 ########################
 
@@ -53,7 +97,7 @@ def tmdb_query(
 
         for i in range(1, 4):  # loop if heavy server load
             try:
-                request = requests.get(url, timeout=5)
+                request = SESSION.get(url, timeout=HTTP_TIMEOUT)
 
                 if str(request.status_code).startswith("5"):
                     raise Exception(str(request.status_code))
@@ -77,8 +121,16 @@ def tmdb_query(
         result = request.json()
 
         if show_error:
+            """Report "nothing found" when the response is empty.
+
+            Upstream's second clause read `not len(result["results"]) == 0`
+            -- true when results *were* returned -- so any successful search
+            raised the not-found error and popped an OK dialog at the user,
+            while a genuinely empty result set passed silently. The negation
+            is dropped here.
+            """
             if len(result) == 0 or (
-                "results" in result and not len(result["results"]) == 0
+                "results" in result and len(result["results"]) == 0
             ):
                 error = ADDON.getLocalizedString(32019)
                 raise Exception(error)
@@ -169,7 +221,7 @@ def tmdb_select_dialog(list, call):
 
     index = 0
     for item in list:
-        icon = IMAGEPATH + item[img] if item[img] is not None else ""
+        icon = image_url(item[img], "thumb")
         list_item = xbmcgui.ListItem(item[label])
         list_item.setArt({"icon": default_img, "thumb": icon})
 
@@ -262,9 +314,7 @@ def tmdb_studios(list_item, item, key):
 
     i = 0
     for studio in item[key_name]:
-        icon = (
-            IMAGEPATH + studio["logo_path"] if studio["logo_path"] is not None else ""
-        )
+        icon = image_url(studio["logo_path"], "logo")
         if icon:
             list_item.setProperty(prop_name + "." + str(i), studio["name"])
             list_item.setProperty(prop_name + ".icon." + str(i), icon)
@@ -272,7 +322,13 @@ def tmdb_studios(list_item, item, key):
 
 
 def tmdb_check_localdb(local_items, title, originaltitle, year, imdbnumber=False):
-    found_local = False
+    """Link a TMDb item to the local library row for it, if there is one.
+
+    `local_items` is normally a LocalIndex. A plain list is still accepted and
+    wrapped, because the widget and nextaired paths hand over the raw lists
+    from get_local_media(); wrapping a list that is then used once is no worse
+    than the scan it replaces.
+    """
     local = {
         "dbid": -1,
         "playcount": 0,
@@ -282,53 +338,29 @@ def tmdb_check_localdb(local_items, title, originaltitle, year, imdbnumber=False
         "file": "",
     }
 
-    if local_items:
-        for item in local_items:
-            dbid = item["dbid"]
-            playcount = item["playcount"]
-            episodes = item.get("episodes", "")
-            watchedepisodes = item.get("watchedepisodes", "")
-            file = item.get("file", "")
+    if not local_items:
+        return local
 
-            if imdbnumber and item["imdbnumber"] == imdbnumber:
-                found_local = True
-                break
+    if not isinstance(local_items, LocalIndex):
+        local_items = LocalIndex(local_items)
 
-            try:
-                tmdb_year = int(tmdb_get_year(year))
-                item_year = int(item["year"])
+    item = local_items.find(title, originaltitle, tmdb_get_year(year), imdbnumber)
 
-                if item_year == tmdb_year:
-                    if (
-                        item["originaltitle"] == originaltitle
-                        or item["title"] == originaltitle
-                        or item["title"] == title
-                    ):
-                        found_local = True
-                        break
-                elif tmdb_year in [
-                    item_year - 2,
-                    item_year - 1,
-                    item_year + 1,
-                    item_year + 2,
-                ]:
-                    if (
-                        item["title"] == title
-                        and item["originaltitle"] == originaltitle
-                    ):
-                        found_local = True
-                        break
+    if item is None:
+        return local
 
-            except ValueError:
-                pass
+    dbid = item["dbid"]
+    playcount = item["playcount"]
+    episodes = item.get("episodes", "")
+    watchedepisodes = item.get("watchedepisodes", "")
+    file = item.get("file", "")
 
-    if found_local:
-        local["dbid"] = dbid
-        local["file"] = file
-        local["playcount"] = playcount
-        local["episodes"] = episodes
-        local["watchedepisodes"] = watchedepisodes
-        local["unwatchedepisodes"] = episodes - watchedepisodes if episodes else ""
+    local["dbid"] = dbid
+    local["file"] = file
+    local["playcount"] = playcount
+    local["episodes"] = episodes
+    local["watchedepisodes"] = watchedepisodes
+    local["unwatchedepisodes"] = episodes - watchedepisodes if episodes else ""
 
     return local
 
@@ -341,7 +373,7 @@ def tmdb_handle_person(item):
     else:
         gender = ""
 
-    icon = IMAGEPATH + item["profile_path"] if item["profile_path"] is not None else ""
+    icon = image_url(item["profile_path"], "profile")
     list_item = xbmcgui.ListItem(label=item["name"])
     list_item.setProperty("birthyear", date_year(item.get("birthday", "")))
     list_item.setProperty("birthday", date_format(item.get("birthday", "")))
@@ -365,10 +397,8 @@ def tmdb_handle_person(item):
 
 
 def tmdb_handle_movie(item, local_items=None, full_info=False, mediatype="movie"):
-    icon = IMAGEPATH + item["poster_path"] if item["poster_path"] is not None else ""
-    backdrop = (
-        IMAGEPATH + item["backdrop_path"] if item["backdrop_path"] is not None else ""
-    )
+    icon = image_url(item["poster_path"], "poster")
+    backdrop = image_url(item["backdrop_path"], "backdrop")
 
     label = item["title"] or item["original_title"]
     originaltitle = item.get("original_title", "")
@@ -439,29 +469,19 @@ def tmdb_handle_movie(item, local_items=None, full_info=False, mediatype="movie"
             list_item.setProperty("collection_id", str(collection["id"]))
             list_item.setProperty(
                 "collection_poster",
-                (
-                    IMAGEPATH + collection["poster_path"]
-                    if collection["poster_path"] is not None
-                    else ""
-                ),
+                (image_url(collection["poster_path"], "poster")),
             )
             list_item.setProperty(
                 "collection_fanart",
-                (
-                    IMAGEPATH + collection["backdrop_path"]
-                    if collection["backdrop_path"] is not None
-                    else ""
-                ),
+                (image_url(collection["backdrop_path"], "backdrop")),
             )
 
     return list_item, is_local
 
 
 def tmdb_handle_tvshow(item, local_items=None, full_info=False, mediatype="tvshow"):
-    icon = IMAGEPATH + item["poster_path"] if item["poster_path"] is not None else ""
-    backdrop = (
-        IMAGEPATH + item["backdrop_path"] if item["backdrop_path"] is not None else ""
-    )
+    icon = image_url(item["poster_path"], "poster")
+    backdrop = image_url(item["backdrop_path"], "backdrop")
 
     label = item["name"] or item["original_name"]
     originaltitle = item.get("original_name", "")
@@ -534,11 +554,7 @@ def tmdb_handle_tvshow(item, local_items=None, full_info=False, mediatype="tvsho
             )
             list_item.setProperty(
                 "lastepisode_thumb",
-                (
-                    IMAGEPATH + last_episode["still_path"]
-                    if last_episode["still_path"] is not None
-                    else ""
-                ),
+                (image_url(last_episode["still_path"], "still")),
             )
 
         if next_episode:
@@ -555,25 +571,17 @@ def tmdb_handle_tvshow(item, local_items=None, full_info=False, mediatype="tvsho
             )
             list_item.setProperty(
                 "nextepisode_thumb",
-                (
-                    IMAGEPATH + next_episode["still_path"]
-                    if next_episode["still_path"] is not None
-                    else ""
-                ),
+                (image_url(next_episode["still_path"], "still")),
             )
 
     return list_item, is_local
 
 
 def tmdb_handle_season(item, tvshow_details, full_info=False):
-    backdrop = (
-        IMAGEPATH + tvshow_details["backdrop_path"]
-        if tvshow_details["backdrop_path"] is not None
-        else ""
-    )
-    icon = IMAGEPATH + item["poster_path"] if item["poster_path"] is not None else ""
+    backdrop = image_url(tvshow_details["backdrop_path"], "backdrop")
+    icon = image_url(item["poster_path"], "poster")
     if not icon and tvshow_details["poster_path"]:
-        icon = IMAGEPATH + tvshow_details["poster_path"]
+        icon = image_url(tvshow_details["poster_path"], "poster")
 
     imdbnumber = (
         tvshow_details["external_ids"]["imdb_id"]
@@ -583,9 +591,7 @@ def tmdb_handle_season(item, tvshow_details, full_info=False):
     season_nr = str(item.get("season_number", ""))
     tvshow_label = tvshow_details["name"] or tvshow_details["original_name"]
 
-    episodes_count = 0
-    for episode in item.get("episodes", ""):
-        episodes_count += 1
+    episodes_count = len(item.get("episodes") or [])
 
     list_item = xbmcgui.ListItem(label=tvshow_label)
     list_item.setInfo(
@@ -665,18 +671,30 @@ def tmdb_get_translation(item, key, language):
 
 
 def tmdb_handle_images(item):
-    icon = IMAGEPATH + item["file_path"] if item["file_path"] is not None else ""
+    """One entry in the browsable poster/backdrop grid.
+
+    These are the worst case for memory in the whole add-on: TMDb happily
+    returns well over a hundred images for a popular title, and upstream gave
+    every one of them an `original` URL, so simply opening the images tab
+    uploaded a hundred full-resolution textures.
+
+    The grid gets a modest thumbnail and the original is carried alongside in
+    `fullsize`, which FullScreenImage reads when one is actually opened. Full
+    quality is then paid for one image at a time instead of all of them at once.
+    """
+    icon = image_url(item["file_path"], "grid")
     list_item = xbmcgui.ListItem(
         label=str(item["width"]) + "x" + str(item["height"]) + "px"
     )
     list_item.setArt({"icon": "DefaultPicture.png", "thumb": icon})
     list_item.setProperty("call", "image")
+    list_item.setProperty("fullsize", image_url(item["file_path"], "original"))
 
     return list_item
 
 
 def tmdb_handle_credits(item):
-    icon = IMAGEPATH + item["profile_path"] if item["profile_path"] is not None else ""
+    icon = image_url(item["profile_path"], "thumb")
     list_item = xbmcgui.ListItem(label=item["name"])
     list_item.setLabel2(item["label2"])
     list_item.setArt({"icon": "DefaultActor.png", "thumb": icon, "poster": icon})

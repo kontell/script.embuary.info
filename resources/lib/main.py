@@ -78,9 +78,14 @@ class TheMovieDB(object):
         if self.tmdb_id:
             self.call_params = {}
 
+            """ Index the local library once per run rather than re-scanning it
+                for every item on every page. call_params is reused for the
+                whole session, so this cost is paid once no matter how far the
+                user browses.
+            """
             local_media = get_local_media()
-            self.call_params["local_shows"] = local_media["shows"]
-            self.call_params["local_movies"] = local_media["movies"]
+            self.call_params["local_shows"] = LocalIndex(local_media["shows"])
+            self.call_params["local_movies"] = LocalIndex(local_media["movies"])
 
             self.entry_point()
 
@@ -725,13 +730,23 @@ class DialogSeason(xbmcgui.WindowXMLDialog):
 
 class FullScreenImage(object):
     def __init__(self, controlId):
+        """Prefer the full-resolution URL the grid item carries.
+
+        tmdb_handle_images gives the grid a small thumbnail so that opening
+        the images tab does not upload a hundred full-size textures, and
+        stashes the original in `fullsize` for exactly this moment. Falling
+        back to Art(thumb) keeps other containers -- posters, backdrops
+        attached to a title -- working unchanged.
+        """
         slideshow = []
         for i in range(int(xbmc.getInfoLabel("Container(%s).NumItems" % controlId))):
-            slideshow.append(
-                xbmc.getInfoLabel(
-                    "Container(%s).ListItemAbsolute(%s).Art(thumb)" % (controlId, i)
-                )
-            )
+            item = "Container(%s).ListItemAbsolute(%s)" % (controlId, i)
+            image = xbmc.getInfoLabel("%s.Property(fullsize)" % item)
+
+            if not image:
+                image = xbmc.getInfoLabel("%s.Art(thumb)" % item)
+
+            slideshow.append(image)
 
         dialog = self.ShowImage(
             "script-embuary-image.xml",

@@ -226,7 +226,7 @@ def _nextaired(day):
             overview = [date_format(airing_date) + " " + airing_time, plot]
             overview = "[CR]".join(filter(None, overview))
 
-            thumb = IMAGEPATH + i.get("still_path") if i.get("still_path") else ""
+            thumb = image_url(i.get("still_path"), "still")
             if not thumb:
                 thumb = (
                     i["localart"].get("landscape") or i["localart"].get("fanart") or ""
