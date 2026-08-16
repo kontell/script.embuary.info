@@ -12,13 +12,17 @@ from resources.lib.helper import *
 
 ########################
 
-OMDB_API_KEY = ADDON.getSettingString('omdb_api_key')
+OMDB_API_KEY = ADDON.getSettingString("omdb_api_key")
 
 ########################
 
-def omdb_api(imdbnumber=None,title=None,year=None,content_type=None):
+
+def omdb_api(imdbnumber=None, title=None, year=None, content_type=None):
     if imdbnumber:
-        url = 'http://www.omdbapi.com/?apikey=%s&i=%s&plot=short&r=xml&tomatoes=true' % (OMDB_API_KEY, imdbnumber)
+        url = (
+            "http://www.omdbapi.com/?apikey=%s&i=%s&plot=short&r=xml&tomatoes=true"
+            % (OMDB_API_KEY, imdbnumber)
+        )
 
     elif title and year and content_type:
         # urllib has issues with some asian letters
@@ -27,7 +31,10 @@ def omdb_api(imdbnumber=None,title=None,year=None,content_type=None):
         except KeyError:
             return
 
-        url = 'http://www.omdbapi.com/?apikey=%s&t=%s&year=%s&plot=short&r=xml&tomatoes=true' % (OMDB_API_KEY, title, year)
+        url = (
+            "http://www.omdbapi.com/?apikey=%s&t=%s&year=%s&plot=short&r=xml&tomatoes=true"
+            % (OMDB_API_KEY, title, year)
+        )
 
     else:
         return
@@ -39,7 +46,7 @@ def omdb_api(imdbnumber=None,title=None,year=None,content_type=None):
     elif OMDB_API_KEY:
         omdb = {}
 
-        for i in range(1,4): # loop if heavy server load
+        for i in range(1, 4):  # loop if heavy server load
             try:
                 request = requests.get(url, timeout=5)
 
@@ -53,32 +60,52 @@ def omdb_api(imdbnumber=None,title=None,year=None,content_type=None):
 
                 for child in root:
                     # imdb ratings
-                    omdb['imdbRating'] = child.get('imdbRating', '').replace('N/A', '')
-                    omdb['imdbVotes'] = child.get('imdbVotes', '0').replace('N/A', '0').replace(',', '')
+                    omdb["imdbRating"] = child.get("imdbRating", "").replace("N/A", "")
+                    omdb["imdbVotes"] = (
+                        child.get("imdbVotes", "0").replace("N/A", "0").replace(",", "")
+                    )
 
                     # regular rotten rating
-                    omdb['tomatometerallcritics'] = child.get('tomatoMeter', '').replace('N/A', '')
-                    omdb['tomatometerallcritics_avg'] = child.get('tomatoRating', '').replace('N/A', '')
-                    omdb['tomatometerallcritics_votes'] = child.get('tomatoReviews', '0').replace('N/A', '0').replace(',', '')
+                    omdb["tomatometerallcritics"] = child.get(
+                        "tomatoMeter", ""
+                    ).replace("N/A", "")
+                    omdb["tomatometerallcritics_avg"] = child.get(
+                        "tomatoRating", ""
+                    ).replace("N/A", "")
+                    omdb["tomatometerallcritics_votes"] = (
+                        child.get("tomatoReviews", "0")
+                        .replace("N/A", "0")
+                        .replace(",", "")
+                    )
 
                     # user rotten rating
-                    omdb['tomatometerallaudience'] = child.get('tomatoUserMeter', '').replace('N/A', '')
-                    omdb['tomatometerallaudience_avg'] = child.get('tomatoUserRating', '').replace('N/A', '')
-                    omdb['tomatometerallaudience_votes'] = child.get('tomatoUserReviews', '0').replace('N/A', '0').replace(',', '')
+                    omdb["tomatometerallaudience"] = child.get(
+                        "tomatoUserMeter", ""
+                    ).replace("N/A", "")
+                    omdb["tomatometerallaudience_avg"] = child.get(
+                        "tomatoUserRating", ""
+                    ).replace("N/A", "")
+                    omdb["tomatometerallaudience_votes"] = (
+                        child.get("tomatoUserReviews", "0")
+                        .replace("N/A", "0")
+                        .replace(",", "")
+                    )
 
                     # metacritic
-                    omdb['metacritic'] = child.get('metascore', '').replace('N/A', '')
+                    omdb["metacritic"] = child.get("metascore", "").replace("N/A", "")
 
                     # other
-                    omdb['awards'] = child.get('awards', '').replace('N/A', '')
-                    omdb['DVD'] = date_format(child.get('DVD', '').replace('N/A', ''), scheme='DD MMM YYYY')
+                    omdb["awards"] = child.get("awards", "").replace("N/A", "")
+                    omdb["DVD"] = date_format(
+                        child.get("DVD", "").replace("N/A", ""), scheme="DD MMM YYYY"
+                    )
 
             except Exception as error:
-                log('OMDB Error: %s' % error)
+                log("OMDB Error: %s" % error)
                 pass
 
             else:
-                write_cache(url,omdb)
+                write_cache(url, omdb)
                 break
 
         return omdb
