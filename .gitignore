@@ -1,4 +1,9 @@
-
-*.pyo
-
+__pycache__/
 *.pyc
+*.pyo
+.venv/
+.tox/
+.mypy_cache/
+.pytest_cache/
+dist/
+*.zip
