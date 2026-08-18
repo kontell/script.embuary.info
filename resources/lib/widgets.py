@@ -114,7 +114,15 @@ plugin = routing.Plugin()
 # entrypoint
 @plugin.route("/")
 def index():
-    for i in ["discover", "movie", "tv", "nextaired", "search"]:
+    """The add-on root, minus whatever the Skin settings hide.
+
+    This is the source of truth the skin buttons follow: MENU_ROOT is named
+    after these keys precisely so there is no second list to keep in step.
+    """
+    for i in MENU_ROOT:
+        if not menu_enabled(i):
+            continue
+
         item = INDEX_MENU[i]
         li_item = ListItem(item["name"])
         li_item.setArt(DEFAULT_ART)
@@ -126,7 +134,19 @@ def index():
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
-# actions
+""" Action routes. These return no listing, but they must still close their
+    handle, and the failure they cause without it is not a small one: Kodi's
+    CScriptRunner::WaitOnScriptResult polls for the script to finish in a loop
+    with no timeout at all, so any caller that waits -- a favourite, a library
+    node, anything reaching the route through GetDirectory -- waits forever.
+
+    Today the interpreter exits after each invocation and releases the caller
+    anyway, which is why this has never been visible. Under
+    <reuselanguageinvoker> the invoker thread parks instead of exiting, Kodi
+    never marks the script done, and these two routes become hangs.
+"""
+
+
 @plugin.route("/info/<call>/<idtype>/<tmdbid>")
 def dialog(call, idtype, tmdbid):
     if idtype == "tmdb":
@@ -136,10 +156,13 @@ def dialog(call, idtype, tmdbid):
             "RunScript(script.embuary.info,call=%s,external_id=%s)" % (call, tmdbid)
         )
 
+    xbmcplugin.endOfDirectory(plugin.handle, succeeded=False)
+
 
 @plugin.route("/search")
 def search():
     execute("RunScript(script.embuary.info)")
+    xbmcplugin.endOfDirectory(plugin.handle, succeeded=False)
 
 
 # next aired
