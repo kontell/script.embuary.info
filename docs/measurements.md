@@ -197,3 +197,49 @@ with the gap: 1175 ms here is plausibly several seconds on a TV box, which is
 what "very slow on first entering" sounds like.
 
 None of the numbers here have been reproduced on the Bravia.
+
+## Replacing requests
+
+`import requests` was the largest single cost left, at 825 ms of every info
+dialog launch. What it was being used for is four call sites doing a plain GET
+or HEAD and reading a body, so it was replaced with `http.client` behind the
+same `SESSION.get`/`SESSION.head` interface.
+
+Builds alternated per round so network drift lands on both arms, same method as
+the page-open comparison further up. Two runs per arm per round, desktop Kodi
+21.3.
+
+| round | cold: requests | cold: stdlib | warm: requests | warm: stdlib |
+|---|---|---|---|---|
+| 1 | 1772 ms | 1446 ms | 1128 ms | 651 ms |
+| 2 | 2432 ms | 1344 ms | 1179 ms | 572 ms |
+| 3 | 1711 ms | 1332 ms | | |
+
+Warm roughly halves, which is the import cost coming out. Cold improves by less
+in proportion, as it should: the network round trips are unchanged and they are
+what the rest of the cold time is.
+
+Taken with everything before it, the info dialog warm goes from **1892 ms to
+around 600 ms**, and plugin listings settle at 73-213 ms once the interpreter is
+parked.
+
+What was kept from `requests.Session`, because dropping any of it would have
+been a regression rather than a saving: per-host connection reuse (the reason a
+session existed at all), gzip, redirect following, thread safety for the trailer
+pool, and one retry when a pooled connection turns out to have been closed by
+the server. That last one urllib3 handled invisibly; `http.client` surfaces it
+as an exception on the *next* request, and without the retry it presents as an
+intermittent failure that reads as a flaky network.
+
+What was not kept, deliberately: cookies, auth, streaming, multipart, retry
+ladders. No call site wanted them.
+
+### A note on the method
+
+An earlier attempt at this A/B reported the two arms as within 2% of each other.
+That was wrong, and the reason is worth writing down: the deploy helper ran
+`git checkout <branch> -- .`, which overwrote the working tree, so both arms
+measured the same code. The tell was that a change measured at 825 ms of import
+time appeared to do nothing at all. **If an A/B says a large, well-understood
+change did nothing, check that the two arms are actually different before
+believing it.**
