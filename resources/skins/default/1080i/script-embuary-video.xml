@@ -886,6 +886,27 @@
 										</control>
 									</control>
 								</control>
+								<!-- TMDb rating, drawn with the active skin's own badge rather than one
+								     of our own. Kodi resolves includes in an add-on's window XML against
+								     the loaded skin, the same way the textures and fonts here already
+								     resolve, so this picks up whatever badge.png and button_focus that
+								     skin uses and matches its poster views for free.
+
+								     UserRatingContent, not RatingCircle: the latter is the same badge
+								     wrapped in Skin.HasSetting(circle_rating), and the rating here should
+								     not depend on a skin setting.
+
+								     Bottom-left because it is the one free corner: these posters already
+								     use top-left for "in your library" and top-right for "watched". The
+								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     Cast, crew and the image grids have no rating and so draw nothing. -->
+								<control type="group">
+									<left>22</left>
+									<top>339</top>
+									<include content="UserRatingContent">
+										<param name="infolabel" value="ListItem.Rating" />
+									</include>
+								</control>
 								<control type="group">
 									<left>29</left>
 									<top>375</top>
@@ -988,6 +1009,27 @@
 											<texture>icons/OverlayWatched.png</texture>
 										</control>
 									</control>
+								</control>
+								<!-- TMDb rating, drawn with the active skin's own badge rather than one
+								     of our own. Kodi resolves includes in an add-on's window XML against
+								     the loaded skin, the same way the textures and fonts here already
+								     resolve, so this picks up whatever badge.png and button_focus that
+								     skin uses and matches its poster views for free.
+
+								     UserRatingContent, not RatingCircle: the latter is the same badge
+								     wrapped in Skin.HasSetting(circle_rating), and the rating here should
+								     not depend on a skin setting.
+
+								     Bottom-left because it is the one free corner: these posters already
+								     use top-left for "in your library" and top-right for "watched". The
+								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     Cast, crew and the image grids have no rating and so draw nothing. -->
+								<control type="group">
+									<left>22</left>
+									<top>339</top>
+									<include content="UserRatingContent">
+										<param name="infolabel" value="ListItem.Rating" />
+									</include>
 								</control>
 								<control type="group">
 									<left>29</left>
@@ -1108,6 +1150,27 @@
 										</control>
 									</control>
 								</control>
+								<!-- TMDb rating, drawn with the active skin's own badge rather than one
+								     of our own. Kodi resolves includes in an add-on's window XML against
+								     the loaded skin, the same way the textures and fonts here already
+								     resolve, so this picks up whatever badge.png and button_focus that
+								     skin uses and matches its poster views for free.
+
+								     UserRatingContent, not RatingCircle: the latter is the same badge
+								     wrapped in Skin.HasSetting(circle_rating), and the rating here should
+								     not depend on a skin setting.
+
+								     Bottom-left because it is the one free corner: these posters already
+								     use top-left for "in your library" and top-right for "watched". The
+								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     Cast, crew and the image grids have no rating and so draw nothing. -->
+								<control type="group">
+									<left>22</left>
+									<top>339</top>
+									<include content="UserRatingContent">
+										<param name="infolabel" value="ListItem.Rating" />
+									</include>
+								</control>
 								<control type="group">
 									<left>29</left>
 									<top>375</top>
@@ -1210,6 +1273,27 @@
 											<texture>icons/OverlayWatched.png</texture>
 										</control>
 									</control>
+								</control>
+								<!-- TMDb rating, drawn with the active skin's own badge rather than one
+								     of our own. Kodi resolves includes in an add-on's window XML against
+								     the loaded skin, the same way the textures and fonts here already
+								     resolve, so this picks up whatever badge.png and button_focus that
+								     skin uses and matches its poster views for free.
+
+								     UserRatingContent, not RatingCircle: the latter is the same badge
+								     wrapped in Skin.HasSetting(circle_rating), and the rating here should
+								     not depend on a skin setting.
+
+								     Bottom-left because it is the one free corner: these posters already
+								     use top-left for "in your library" and top-right for "watched". The
+								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     Cast, crew and the image grids have no rating and so draw nothing. -->
+								<control type="group">
+									<left>22</left>
+									<top>339</top>
+									<include content="UserRatingContent">
+										<param name="infolabel" value="ListItem.Rating" />
+									</include>
 								</control>
 								<control type="group">
 									<left>29</left>
@@ -1330,6 +1414,27 @@
 										</control>
 									</control>
 								</control>
+								<!-- TMDb rating, drawn with the active skin's own badge rather than one
+								     of our own. Kodi resolves includes in an add-on's window XML against
+								     the loaded skin, the same way the textures and fonts here already
+								     resolve, so this picks up whatever badge.png and button_focus that
+								     skin uses and matches its poster views for free.
+
+								     UserRatingContent, not RatingCircle: the latter is the same badge
+								     wrapped in Skin.HasSetting(circle_rating), and the rating here should
+								     not depend on a skin setting.
+
+								     Bottom-left because it is the one free corner: these posters already
+								     use top-left for "in your library" and top-right for "watched". The
+								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     Cast, crew and the image grids have no rating and so draw nothing. -->
+								<control type="group">
+									<left>22</left>
+									<top>339</top>
+									<include content="UserRatingContent">
+										<param name="infolabel" value="ListItem.Rating" />
+									</include>
+								</control>
 								<control type="group">
 									<left>29</left>
 									<top>375</top>
@@ -1432,6 +1537,27 @@
 											<texture>icons/OverlayWatched.png</texture>
 										</control>
 									</control>
+								</control>
+								<!-- TMDb rating, drawn with the active skin's own badge rather than one
+								     of our own. Kodi resolves includes in an add-on's window XML against
+								     the loaded skin, the same way the textures and fonts here already
+								     resolve, so this picks up whatever badge.png and button_focus that
+								     skin uses and matches its poster views for free.
+
+								     UserRatingContent, not RatingCircle: the latter is the same badge
+								     wrapped in Skin.HasSetting(circle_rating), and the rating here should
+								     not depend on a skin setting.
+
+								     Bottom-left because it is the one free corner: these posters already
+								     use top-left for "in your library" and top-right for "watched". The
+								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     Cast, crew and the image grids have no rating and so draw nothing. -->
+								<control type="group">
+									<left>22</left>
+									<top>339</top>
+									<include content="UserRatingContent">
+										<param name="infolabel" value="ListItem.Rating" />
+									</include>
 								</control>
 								<control type="group">
 									<left>29</left>
