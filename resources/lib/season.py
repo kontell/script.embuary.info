@@ -6,7 +6,6 @@
 import sys
 import xbmc
 import xbmcgui
-import requests
 
 from resources.lib.helper import *
 from resources.lib.tmdb import *

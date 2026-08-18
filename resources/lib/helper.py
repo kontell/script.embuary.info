@@ -12,10 +12,10 @@ import datetime
 import os
 import operator
 import sys
-import requests
 import simplecache
 import hashlib
 
+from resources.lib.http_session import HttpSession
 from resources.lib.settings import *
 
 ########################
@@ -45,21 +45,13 @@ DIALOG = xbmcgui.Dialog()
     desktop: a TLS handshake on a low-end ARM SoC is tens of milliseconds of
     real CPU, not a rounding error.
 
-    max_retries stays 0 because the callers already implement their own retry
-    with a delay between attempts, and stacking urllib3's retries underneath
-    would multiply the worst-case wait rather than bound it.
+    The session itself is no longer requests. `import requests` cost 825 ms
+    inside Kodi 21's interpreter, on every launch of the info dialog, which is
+    half the time it took to open a page; see resources/lib/http_session.py.
+    The connection reuse it was here for is kept.
 """
-SESSION = requests.Session()
-_ADAPTER = requests.adapters.HTTPAdapter(
-    pool_connections=4, pool_maxsize=8, max_retries=0
-)
-SESSION.mount("https://", _ADAPTER)
-SESSION.mount("http://", _ADAPTER)
+SESSION = HttpSession()
 
-""" Every outbound request gets a deadline. Upstream's trailer check had none
-    at all, so a single unresponsive host could hang the dialog indefinitely --
-    with the busy dialog up and no way out.
-"""
 HTTP_TIMEOUT = 5
 
 FALLBACK_LANGUAGE = "en"

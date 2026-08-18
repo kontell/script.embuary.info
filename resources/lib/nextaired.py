@@ -3,7 +3,6 @@
 
 ########################
 
-import requests
 
 from resources.lib.helper import *
 from resources.lib.tmdb import *
