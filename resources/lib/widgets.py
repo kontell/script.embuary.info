@@ -4,6 +4,14 @@
 ########################
 
 import routing
+
+""" arrow is imported here rather than inherited from helper, which no longer
+    uses it. The one thing it does that the standard library will not do in a
+    line is the locale-aware long date below, and this is the plugin path,
+    which nobody is watching a spinner for.
+"""
+import arrow
+
 from xbmcgui import ListItem
 from xbmcplugin import *
 from datetime import date

@@ -9,7 +9,6 @@ import xbmcgui
 import requests
 
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor
 
 from resources.lib.helper import *
 from resources.lib.tmdb import *
@@ -68,6 +67,12 @@ def filter_live_videos(videos):
     """
     if not videos:
         return []
+
+    """ Imported here rather than at module scope: ~20 ms inside Kodi's
+        interpreter, and every page whose trailer list is already cached never
+        reaches this function at all.
+    """
+    from concurrent.futures import ThreadPoolExecutor
 
     def alive(item):
         try:

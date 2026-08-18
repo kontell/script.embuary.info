@@ -6,8 +6,6 @@
 import json
 import sys
 import requests
-import xml.etree.ElementTree as ET
-
 from urllib.parse import quote
 
 from resources.lib.helper import *
@@ -49,6 +47,12 @@ def omdb_api(imdbnumber=None, title=None, year=None, content_type=None):
         return omdb
 
     elif omdb_api_key():
+        """Imported here rather than at module scope: it costs ~31 ms inside
+        Kodi's interpreter and is dead weight for everyone who has not
+        entered an OMDb key, which is the default.
+        """
+        import xml.etree.ElementTree as ET
+
         omdb = {}
 
         for i in range(1, 4):  # loop if heavy server load
@@ -101,8 +105,17 @@ def omdb_api(imdbnumber=None, title=None, year=None, content_type=None):
 
                     # other
                     omdb["awards"] = child.get("awards", "").replace("N/A", "")
+                    """ date_format has no `scheme` keyword and never has,
+                        so this line raised TypeError every time an OMDb key
+                        was configured. Being inside the try, it skipped the
+                        else branch that caches and breaks -- so every movie
+                        page made three OMDb requests, cached none of them, and
+                        never filled in DVD. The scheme is now a real argument
+                        and takes a strftime string, which is what getRegion
+                        returns and what date_format has always fed strftime.
+                    """
                     omdb["DVD"] = date_format(
-                        child.get("DVD", "").replace("N/A", ""), scheme="DD MMM YYYY"
+                        child.get("DVD", "").replace("N/A", ""), scheme="%d %b %Y"
                     )
 
             except Exception as error:

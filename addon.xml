@@ -38,6 +38,42 @@
     </extension>
     <extension point="xbmc.service" library="service.py" />
     <extension point="xbmc.addon.metadata">
+        <!--
+          Reuse the Python interpreter between invocations instead of tearing
+          it down each time.
+
+          It is parsed only here. Under xbmc.python.pluginsource, where it
+          reads as though it belongs, AddonInfoBuilder never looks at it and
+          nothing is logged either way.
+
+          What it buys, measured on this Kodi 21.3: opening a movie page warm
+          takes 1642 ms, of which 1175 ms is imports and 825 ms of that is
+          `import requests` alone. A parked interpreter keeps sys.modules, so
+          the second and later launches skip all of it.
+
+          Reuse is opportunistic, not guaranteed: Kodi keeps one reusable
+          invoker thread system-wide and gives it up as soon as any other
+          script runs. So the cold path still has to be worth something on its
+          own, and the import cost above is still worth attacking.
+
+          Three things had to be true before this could be turned on, all of
+          them silent failures otherwise:
+
+            * plugin.py refreshes plugin.handle from sys.argv, because
+              script.module.routing captures it at import and run() does not
+              re-read it.
+            * The action routes close their handle. Kodi's wait loop for a
+              script has no timeout, and a parked invoker never reports the
+              script as finished, so a missing endOfDirectory becomes an
+              unbounded hang rather than a harmless omission.
+            * Settings are read per launch rather than into module constants,
+              or a parked module keeps the first launch's values forever.
+
+          One consequence for development: copying new files in does not take
+          effect while an interpreter is parked with the old modules in
+          sys.modules. Disable and re-enable the add-on to discard it.
+        -->
+        <reuselanguageinvoker>true</reuselanguageinvoker>
         <platform>all</platform>
         <license>Apache-2.0</license>
         <source>https://github.com/kontell/script.embuary.info</source>

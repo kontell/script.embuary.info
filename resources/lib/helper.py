@@ -11,7 +11,6 @@ import time
 import datetime
 import os
 import operator
-import arrow
 import sys
 import requests
 import simplecache
@@ -207,6 +206,52 @@ def winprop(key, value=None, clear=False, window_id=10000):
         return result
 
 
+""" Dates.
+
+    These used to go through `arrow`, which cost 154 ms to import inside Kodi's
+    interpreter and was paid on every single launch of the info dialog -- a
+    launch that cannot amortise it, because <reuselanguageinvoker> does not
+    apply to RunScript. What arrow was doing here is parsing two shapes and
+    calling strftime, so it is now the standard library.
+
+    arrow is still a dependency, but only of widgets.py, whose locale-aware
+    "Thursday, 21 August 2026" has no concise stdlib equivalent. The plugin and
+    the service can afford it; they are not what a user waits on.
+"""
+
+DATE_FORMATS = (
+    "%Y-%m-%dT%H:%M:%S.%f%z",
+    "%Y-%m-%dT%H:%M:%S%z",
+    "%Y-%m-%dT%H:%M:%S",
+    "%Y-%m-%d",
+    "%Y",
+)
+
+
+def parse_date(value):
+    """A datetime from the date shapes this add-on sees, or None.
+
+    TMDb writes YYYY-MM-DD; Trakt writes an ISO timestamp ending in Z, which
+    fromisoformat did not accept before Python 3.11 and which Kodi 20 would
+    therefore have choked on.
+    """
+    if not value:
+        return None
+
+    text = str(value).strip()
+
+    if text.endswith("Z"):
+        text = text[:-1] + "+0000"
+
+    for date_format_string in DATE_FORMATS:
+        try:
+            return datetime.datetime.strptime(text, date_format_string)
+        except ValueError:
+            continue
+
+    return None
+
+
 def date_year(value):
     """Year as a string, or '' if the value will not parse.
 
@@ -220,65 +265,98 @@ def date_year(value):
     if not value:
         return value
 
-    try:
-        return str(arrow.get(value).year)
+    parsed = parse_date(value)
 
-    except Exception:
-        return ""
+    return str(parsed.year) if parsed else ""
 
 
-def date_format(value, date="short"):
+def date_format(value, date="short", scheme=None):
+    """Value rendered the way this Kodi renders dates.
+
+    `scheme` overrides the region format with an explicit strftime string.
+    xbmc.getRegion returns strftime formats already -- '%Y-%m-%d' for dateshort
+    on the box this was written against -- so both paths feed strftime alike.
+    """
     if not value:
         return value
 
+    parsed = parse_date(value)
+
+    if parsed is None:
+        return value
+
     try:
-        date_time = arrow.get(value)
-        value = date_time.strftime(xbmc.getRegion("date%s" % date))
+        return parsed.strftime(scheme or xbmc.getRegion("date%s" % date))
 
     except Exception:
-        pass
-
-    return value
+        return value
 
 
 def date_delta(date):
-    date = arrow.get(date, "YYYY-MM-DD").date()
-    return date - datetime.date.today()
+    """Days from today until `date`; negative once it is past.
+
+    An unparseable value is treated as the far-future sentinel the callers pass
+    when they have no date at all. Upstream let arrow raise here, which would
+    have taken down the whole page rather than misfiltering one item.
+    """
+    parsed = parse_date(date)
+    day = parsed.date() if parsed else datetime.date(2900, 1, 1)
+
+    return day - datetime.date.today()
 
 
 def date_weekday(date=None):
-    if not date:
-        utc = arrow.utcnow()
-        date = utc.to(TIMEZONE).date()
+    """(localised weekday name, weekday index) for a date, or today.
 
-    try:
-        weekdays = (
-            xbmc.getLocalizedString(11),
-            xbmc.getLocalizedString(12),
-            xbmc.getLocalizedString(13),
-            xbmc.getLocalizedString(14),
-            xbmc.getLocalizedString(15),
-            xbmc.getLocalizedString(16),
-            xbmc.getLocalizedString(17),
-        )
-        date = arrow.get(date).date()
-        weekday = date.weekday()
-        return weekdays[weekday], weekday
+    Accepts a string, a date, a datetime, or an arrow -- widgets.py still holds
+    arrow objects and passes them straight in.
+    """
+    if date is None:
+        day = datetime.datetime.now().date()
 
-    except Exception:
-        return "", ""
+    elif hasattr(date, "date"):
+        day = date.date()
+
+    elif isinstance(date, datetime.date):
+        day = date
+
+    else:
+        parsed = parse_date(date)
+
+        if parsed is None:
+            return "", ""
+
+        day = parsed.date()
+
+    weekdays = (
+        xbmc.getLocalizedString(11),
+        xbmc.getLocalizedString(12),
+        xbmc.getLocalizedString(13),
+        xbmc.getLocalizedString(14),
+        xbmc.getLocalizedString(15),
+        xbmc.getLocalizedString(16),
+        xbmc.getLocalizedString(17),
+    )
+
+    return weekdays[day.weekday()], day.weekday()
 
 
 def utc_to_local(value):
-    conv_date = arrow.get(value).to(TIMEZONE)
-    conv_date_str = conv_date.strftime("%Y-%m-%d")
+    """A UTC timestamp as (local date, local time) strings."""
+    parsed = parse_date(value)
+
+    if parsed is None:
+        return "", ""
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=datetime.timezone.utc)
+
+    local = parsed.astimezone()
 
     if xbmc.getRegion("time").startswith("%I"):
-        conv_time_str = conv_date.strftime("%I:%M %p")
-    else:
-        conv_time_str = conv_date.strftime("%H:%M")
+        return local.strftime("%Y-%m-%d"), local.strftime("%I:%M %p")
 
-    return conv_date_str, conv_time_str
+    return local.strftime("%Y-%m-%d"), local.strftime("%H:%M")
 
 
 def get_bool(value, string="true"):
