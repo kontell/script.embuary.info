@@ -487,3 +487,13 @@ msgstr ""
 msgctxt "#32091"
 msgid "Caching, and the optional context menu add-on."
 msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32092"
+msgid "Hide posthumous releases"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32093"
+msgid "Hides credits released after the person died. A credit with no release date is kept, since an unknown date is not evidence either way."
+msgstr ""

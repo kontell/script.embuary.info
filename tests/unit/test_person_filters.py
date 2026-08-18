@@ -19,6 +19,7 @@ from resources.lib.person import (
     GENRE_DOCUMENTARY,
     is_appearance,
     is_documentary,
+    is_posthumous,
     skip_credit,
 )
 
@@ -182,3 +183,59 @@ def test_talk_show_genre_is_left_to_the_shows_filter():
     set_setting("filter_documentaries", "true")
 
     assert not skip_credit(credit("Self", genres=(TALK_SHOW,)))
+
+
+########################
+""" is_posthumous
+"""
+
+DIED = "1993-10-31"  # River Phoenix, near enough
+
+
+@pytest.mark.parametrize(
+    "released,expected",
+    [
+        ("1993-11-01", True),  # the day after
+        ("1994-06-10", True),
+        ("2020-01-01", True),
+        ("1993-10-31", False),  # the day itself is not posthumous
+        ("1993-10-30", False),
+        ("1991-04-05", False),
+        ("1900-01-01", False),  # sort_dict's sentinel for a missing date
+        ("", False),
+        ("1994", False),  # partial date: not enough to judge
+    ],
+)
+def test_posthumous_is_decided_by_the_release_date(released, expected):
+    assert is_posthumous({"release_date": released}, DIED) is expected
+
+
+def test_nothing_is_posthumous_for_someone_still_alive():
+    """TMDb gives deathday as null, which reaches us as ''."""
+    assert not is_posthumous({"release_date": "2026-01-01"}, "")
+    assert not is_posthumous({"release_date": "2026-01-01"}, None)
+
+
+def test_tv_credits_are_judged_on_first_air_date():
+    """The TV list has not copied first_air_date into release_date yet at the
+    point the filter runs, so the fallback is load-bearing.
+    """
+    assert is_posthumous({"first_air_date": "1994-01-01"}, DIED)
+    assert not is_posthumous({"first_air_date": "1992-01-01"}, DIED)
+
+
+def test_posthumous_filter_is_opt_in():
+    set_setting("filter_movies", "false")
+    set_setting("filter_documentaries", "false")
+
+    set_setting("filter_posthumous", "false")
+    assert not skip_credit({"release_date": "1994-06-10"}, DIED)
+
+    set_setting("filter_posthumous", "true")
+    assert skip_credit({"release_date": "1994-06-10"}, DIED)
+    assert not skip_credit({"release_date": "1991-06-10"}, DIED)
+
+
+def test_posthumous_filter_ignores_the_living():
+    set_setting("filter_posthumous", "true")
+    assert not skip_credit({"release_date": "2026-06-10"}, "")

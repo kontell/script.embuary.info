@@ -130,6 +130,11 @@
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="filter_posthumous" type="boolean" label="32092" help="32093">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
 			</group>
 			<group id="3" label="32065">
 				<setting id="similar_movies_filter" type="boolean" label="32041" help="32080">
@@ -166,12 +171,12 @@
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
-				<setting id="menu_movies" type="boolean" label="342">
+				<setting id="menu_movie" type="boolean" label="342">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
-				<setting id="menu_tvshows" type="boolean" label="20343">
+				<setting id="menu_tv" type="boolean" label="20343">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>

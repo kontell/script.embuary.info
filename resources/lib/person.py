@@ -77,17 +77,43 @@ def is_appearance(item):
     return bool(SELF_CREDIT.search(character))
 
 
-def skip_credit(item):
-    """Whether the two documentary settings hide this credit between them.
+def is_posthumous(item, deathday):
+    """Whether a credit was released after the person died.
 
-    Kept as one function because both lists ask the same question, and because
-    the order matters: hiding documentaries outright subsumes hiding the
-    appearances within them.
+    Dates are compared as ISO strings rather than parsed. TMDb writes both
+    fields as YYYY-MM-DD, and that ordering is the same either way, so parsing
+    would only add a way to raise on a malformed one.
+
+    A credit with no usable date is not posthumous. Missing dates reach here as
+    the 1900-01-01 sentinel sort_dict substitutes, which sorts before any
+    deathday and so is kept -- correct, because "date unknown" is not evidence
+    of anything.
+    """
+    if not deathday:
+        return False
+
+    released = (item.get("release_date") or item.get("first_air_date") or "")[:10]
+
+    if len(released) < 10:
+        return False
+
+    return released > deathday[:10]
+
+
+def skip_credit(item, deathday=None):
+    """Whether the person-credit settings hide this credit between them.
+
+    Kept as one function because the movie and TV lists ask exactly the same
+    question, and because the order matters: hiding documentaries outright
+    subsumes hiding the appearances within them.
     """
     if filter_documentaries() and is_documentary(item):
         return True
 
-    return filter_movies() and is_appearance(item)
+    if filter_movies() and is_appearance(item):
+        return True
+
+    return filter_posthumous() and is_posthumous(item, deathday)
 
 
 ########################
@@ -118,6 +144,11 @@ class TMDBPersons(object):
 
             if not self.details:
                 return
+
+            """ TMDb gives the person's deathday on the same payload as the
+                credits, so the posthumous filter costs no extra request.
+            """
+            self.deathday = self.details.get("deathday") or ""
 
             self.local_movie_count = 0
             self.local_tv_count = 0
@@ -169,9 +200,10 @@ class TMDBPersons(object):
         for item in movies:
             skip_movie = False
 
-            """ Filter out documentaries, and appearances within them
+            """ Filter out documentaries, appearances within them, and
+                releases the person did not live to see
             """
-            if skip_credit(item):
+            if skip_credit(item, self.deathday):
                 skip_movie = True
 
             """ Filter to hide in production or rumored future movies
@@ -222,7 +254,7 @@ class TMDBPersons(object):
                 person's list carried every documentary series they had ever
                 been interviewed for however the movie setting was set.
             """
-            if skip_credit(item):
+            if skip_credit(item, self.deathday):
                 skip_show = True
 
             """ Filter to hide in production or rumored future shows

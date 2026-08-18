@@ -162,6 +162,11 @@ def filter_documentaries():
     return _bool("filter_documentaries")
 
 
+def filter_posthumous():
+    """Hide credits released after the person died."""
+    return _bool("filter_posthumous")
+
+
 def similar_movies_filter():
     return _bool("similar_movies_filter")
 
@@ -192,12 +197,14 @@ def cache_enabled():
     service mirrors each onto a window property for skins to gate on. See
     service.py.
 
-    MENU_ROOT are entries in the add-on's own root listing. MENU_BUTTONS are
-    deep links that exist only as buttons a skin draws; there is no root entry
-    to hide, which is why they are listed separately.
+    MENU_ROOT are entries in the add-on's own root listing, named after the
+    INDEX_MENU keys in widgets.py so that the root listing needs no mapping
+    table to filter itself. MENU_BUTTONS are deep links that exist only as
+    buttons a skin draws -- there is no root entry to hide, which is why they
+    are listed separately.
 """
 
-MENU_ROOT = ("discover", "movies", "tvshows", "nextaired", "search")
+MENU_ROOT = ("discover", "movie", "tv", "nextaired", "search")
 MENU_BUTTONS = ("now_playing", "upcoming")
 MENU_ENTRIES = MENU_ROOT + MENU_BUTTONS
 
