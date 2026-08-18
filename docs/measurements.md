@@ -243,3 +243,46 @@ measured the same code. The tell was that a change measured at 825 ms of import
 time appeared to do nothing at all. **If an A/B says a large, well-understood
 change did nothing, check that the two arms are actually different before
 believing it.**
+
+## End to end, against the build this work started from
+
+The comparisons above each measure one change. This is the whole of it: the fork
+as it stood at `main`, against the finished branch, on the path the original
+complaint named — opening a movie page from a library item.
+
+Cold means the add-on's simplecache emptied before each run, so every TMDb call,
+the OMDb call and the trailer checks are paid for real. That is the first time
+you open a given title. Builds alternated per round.
+
+| round | `main` | final |
+|---|---|---|
+| 1 | 2364 ms | 1414 ms |
+| 2 | 2404 ms | 1479 ms |
+| 3 | 3242 ms | 1444 ms |
+| 4 | 2471 ms | 1394 ms |
+| **median** | **2438 ms** | **1429 ms** |
+
+**Cold: 41% faster, 1.7x.** Warm, from the sections above: 1892 ms to around
+600 ms, **68% faster, 3.2x**.
+
+Cold improves by less in proportion, and that is the expected shape rather than
+a disappointment. What was removed was fixed CPU cost — imports, a library blob,
+an id lookup. The network round trips are untouched, and having taken a second
+off the fixed cost they are now most of what remains. Roughly 1.4 s of a cold
+open is TMDb, OMDb and YouTube answering.
+
+One incidental result worth noting: the spread across runs collapses, 2364-3242
+ms on `main` against 1394-1479 ms after. Same machine, same connection,
+interleaved runs. No claim about the cause; it is simply much more predictable
+than it was.
+
+### Reading these two numbers
+
+Warm is the one that describes browsing: paging between cast, similar titles and
+back again, which is where a session's time actually goes and where the 3.2x
+lands. Cold is the first touch of each new title.
+
+Neither has been reproduced on the Bravia. Per the ARM section above, the fixed
+costs removed here are CPU-bound and should scale with the 8-20x gap measured on
+this add-on's workload, while the network half will not — so the cold split on a
+TV box should tilt further toward the network than it does here.
