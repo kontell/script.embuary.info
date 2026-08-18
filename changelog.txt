@@ -1,3 +1,13 @@
+v2.2.0
+- Settings are now four tabs - General, Skin, API keys, Advanced - with the descriptions moved out of the labels into help text. Existing settings keep their values.
+- Person credits: appearances as themselves are recognised however TheMovieDB spells them. The old check matched only "himself" and "herself", and only when a character was filled in at all, so it caught none of Tom Hanks' 114 documentary credits and 2 of Martin Scorsese's 260. Genuine roles are kept: named voice parts in documentaries stay.
+- Person credits: the same filter now applies to TV, which was never filtered at all.
+- New setting to hide documentaries outright, and one to hide releases the person did not live to see.
+- Posters in the Similar, Collection, Seasons, Movies and TV shows rows show the rating, drawn with the current skin's own badge rather than one of ours, so it matches whatever skin is in use.
+- New Skin tab with a toggle per button a skin offers for this add-on, so In cinemas, In cinemas soon and Next aired can be switched off without editing the skin. Adds a Search button among them.
+- Opening a page is much faster: 1.9s to 0.6s warm and 2.4s to 1.4s cold, measured on a desktop, and proportionally more on the slower devices this runs on. Most of what went was import cost the info dialog paid on every single launch.
+- Fixed: with an OMDb key set, every movie page made three OMDb requests, cached none of them, and never filled in the retail date.
+
 v2.1.0
 - Fork of sualfred's Embuary Info, based on the unreleased upstream 2.0.10 (20 commits past the released 2.0.8).
 - Fixed unbounded memory growth while browsing. Every page visited in a session stayed resident, so a long session could push Kodi into an out-of-memory kill. Measured on an Android TV box: seven pages held 983 MB of GPU memory and 2.1 GB total, against a 46 MB / 582 MB idle baseline.
