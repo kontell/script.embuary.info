@@ -104,3 +104,96 @@ The 707 figure is not meaningless, though. Opening the images tab and scrolling 
 Compared between the fork point (`f4e1f02`) and HEAD: RunScript arguments, control ids 10051-10059, ListItem properties, window properties, the `onnext`/`onback_<id>`/`onclose` skin hooks, and skin XML filenames are all unchanged. `setProperty` call count goes 65 to 66, the addition being `fullsize`.
 
 That is what makes 2.1.0 a minor version rather than a major one: nothing integrating with this add-on has to change.
+
+## Entering the add-on, and where that time goes
+
+The complaint was that entering the add-on from a library list is slow. It was,
+and almost none of it was the add-on's own work.
+
+Desktop Kodi 21.3, library of 1775 movies, opening a movie page from the library
+by dbid, warm (TMDb responses already in simplecache). Time is measured from
+firing the launch to the dialog reporting itself visible, polled over JSON-RPC.
+
+| stage | cumulative | this stage |
+|---|---|---|
+| imports done | 1175 ms | **1175 ms** |
+| find_id done | 1277 ms | 102 ms |
+| library index built | 1292 ms | 15 ms |
+| page data fetched | 1666 ms | 374 ms |
+| onInit reached | 1742 ms | 76 ms |
+| listitems added | 1787 ms | 45 ms |
+
+Imports are 1175 ms of a 1642 ms median page open. Broken down by import:
+
+| import | cost |
+|---|---|
+| `requests` | **825 ms** |
+| `arrow` | 154 ms |
+| stdlib + Kodi modules | 130 ms |
+| `xml.etree` | 31 ms |
+| `concurrent.futures` | 20 ms |
+| `urllib.request` | 8 ms |
+
+`requests` alone is half the time it takes to open a page. That matches the
+1.11 s figure measured elsewhere on Kodi 21; it is executing the package's
+module bodies, and bytecode caching does not help.
+
+## Interpreter reuse, and the half of it that does not apply
+
+`<reuselanguageinvoker>` parks the interpreter instead of tearing it down, so a
+second invocation skips every import. Two things had to be established the hard
+way.
+
+**It needs a Kodi restart, not an add-on bounce.** Kodi caches the parsed
+addon.xml, so disable/enable leaves the flag inert. Measured with the flag in
+place but only bounced, four consecutive plugin fetches:
+
+| | fetch 1 | fetch 2 | fetch 3 | fetch 4 |
+|---|---|---|---|---|
+| after a bounce | 1429 ms | 1663 ms | 1452 ms | 2104 ms |
+| after a restart | 1671 ms | 262 ms | 206 ms | 170 ms |
+
+The imports log 0 ms from the second fetch onward and the interpreter's module
+ids are identical across all four, so this is genuine reuse rather than warming.
+Without knowing about the restart, the flag measures as doing nothing at all.
+
+**It does not apply to `RunScript`.** Six consecutive info-dialog launches each
+got a fresh interpreter and paid the full import cost. Checked with nothing else
+running in between (the log shows no other script), and again from a clean
+restart having never touched the plugin path, in case the single reusable
+invoker slot was simply held by `plugin.py`. Same result both times: different
+module id, 1100-1400 ms of imports, every launch.
+
+So the path the complaint is about cannot amortise its imports. The only lever
+on it is importing less.
+
+## What changed, and what it bought
+
+| | before | after |
+|---|---|---|
+| info dialog (RunScript), warm | 1892 ms | 1388 ms |
+| plugin listing, first call | ~1450 ms | 1069 ms |
+| plugin listing, repeat calls | ~1450 ms | 117-224 ms |
+| cached local library index | 2213 KB | 717 KB |
+
+The dialog's 504 ms comes from dropping `arrow` (154 ms), deferring `xml.etree`
+(31 ms) and `concurrent.futures` (20 ms) into the paths that need them, deleting
+an unused `urllib.request` (8 ms), caching the external-id lookup that ran on
+every open (~66 ms), and a smaller library blob to read and parse.
+
+**`import requests` is untouched and is still 825 ms of every dialog launch.**
+It is now by a wide margin the largest single cost in the add-on, and interpreter
+reuse cannot reach it. Removing it means replacing the shared `requests.Session`
+with `http.client`, keeping per-host connection reuse, across tmdb, omdb, trakt
+and the trailer HEAD pool.
+
+## What this does not tell you
+
+Every figure above is from a desktop. Per the section further up, the ARM gap on
+this add-on's workload measured 8x to 20x rather than the much larger number
+often quoted, and a null result on a desktop says nothing either way. The import
+costs in particular are CPU-bound module-body execution, so they should scale
+with the gap: 1175 ms here is plausibly several seconds on a TV box, which is
+what "very slow on first entering" sounds like.
+
+None of the numbers here have been reproduced on the Bravia.

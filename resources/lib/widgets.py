@@ -4,6 +4,14 @@
 ########################
 
 import routing
+
+""" arrow is imported here rather than inherited from helper, which no longer
+    uses it. The one thing it does that the standard library will not do in a
+    line is the locale-aware long date below, and this is the plugin path,
+    which nobody is watching a spinner for.
+"""
+import arrow
+
 from xbmcgui import ListItem
 from xbmcplugin import *
 from datetime import date
@@ -126,7 +134,19 @@ def index():
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
-# actions
+""" Action routes. These return no listing, but they must still close their
+    handle, and the failure they cause without it is not a small one: Kodi's
+    CScriptRunner::WaitOnScriptResult polls for the script to finish in a loop
+    with no timeout at all, so any caller that waits -- a favourite, a library
+    node, anything reaching the route through GetDirectory -- waits forever.
+
+    Today the interpreter exits after each invocation and releases the caller
+    anyway, which is why this has never been visible. Under
+    <reuselanguageinvoker> the invoker thread parks instead of exiting, Kodi
+    never marks the script done, and these two routes become hangs.
+"""
+
+
 @plugin.route("/info/<call>/<idtype>/<tmdbid>")
 def dialog(call, idtype, tmdbid):
     if idtype == "tmdb":
@@ -136,10 +156,13 @@ def dialog(call, idtype, tmdbid):
             "RunScript(script.embuary.info,call=%s,external_id=%s)" % (call, tmdbid)
         )
 
+    xbmcplugin.endOfDirectory(plugin.handle, succeeded=False)
+
 
 @plugin.route("/search")
 def search():
     execute("RunScript(script.embuary.info)")
+    xbmcplugin.endOfDirectory(plugin.handle, succeeded=False)
 
 
 # next aired
@@ -527,7 +550,7 @@ def _category(content="", category="", call=None, info=None):
 
 
 def _query(content_type, call, get=None, params=None, get_details=False):
-    args = {"region": COUNTRY_CODE}
+    args = {"region": country_code()}
     if params:
         args.update(params)
 

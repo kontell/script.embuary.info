@@ -63,8 +63,8 @@ class TheMovieDB(object):
         elif self.call == "movie":
             self.dbtype = "movie"
 
-        winprop("script.embuary.info-language_code", DEFAULT_LANGUAGE)
-        winprop("script.embuary.info-country_code", COUNTRY_CODE)
+        winprop("script.embuary.info-language_code", language_code())
+        winprop("script.embuary.info-country_code", country_code())
 
         busydialog()
 

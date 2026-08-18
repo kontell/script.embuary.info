@@ -3,15 +3,18 @@
 Three things get in the way, all of them at import time rather than call time,
 which is why this is a conftest and not a fixture:
 
-  * `helper.py` builds ADDON at module scope and reads settings from it.
-    Kodistubs' Addon returns '' for everything, and `video.py` does
-    `int(ADDON.getSetting("filter_daydelta"))` -- so the real stub raises
-    ValueError before a single test runs.
+  * `helper.py` builds ADDON at module scope, and every settings accessor in
+    `resources.lib.settings` goes through `xbmcaddon.Addon()`. Kodistubs'
+    Addon returns '' for everything, which is the wrong type for the boolean
+    and integer settings.
   * `simplecache`, `arrow` and `routing` are Kodi add-on modules resolved from
     the user's add-on directory at runtime. They are not on PyPI in the form
     Kodi ships, so they are faked here rather than installed.
   * The add-on imports itself as `resources.lib.x`, which only resolves with
     the repo root on sys.path.
+
+`set_setting` is the way a test changes one: values are memoised for the length
+of a launch, so writing into `_SETTINGS` alone would not be seen.
 """
 
 import sys
@@ -89,8 +92,8 @@ sys.modules.setdefault("arrow", _fake_arrow())
 sys.modules.setdefault("routing", _fake_routing())
 
 
-""" Settings the add-on reads at import. Only the types have to be right --
-    every test that cares about a value sets it explicitly.
+""" Stand-in settings store. Only the types have to be right -- every test that
+    cares about a value sets it explicitly, through set_setting().
 """
 _SETTINGS = {
     "tmdb_api_key": "test-key",
@@ -98,7 +101,6 @@ _SETTINGS = {
     "country_code": "GB",
     "language_code": "en-GB",
     "filter_daydelta": "0",
-    "image_quality": "1",
 }
 
 
@@ -132,3 +134,29 @@ class _FakeAddon:
 import xbmcaddon  # noqa: E402  (must follow the sys.modules setup above)
 
 xbmcaddon.Addon = _FakeAddon
+
+import pytest  # noqa: E402
+
+from resources.lib import settings as _settings  # noqa: E402
+
+
+def set_setting(key, value):
+    """Set one setting and drop the memo, the way Kodi's own change would.
+
+    Writing straight into _SETTINGS is not enough: accessors memoise for the
+    length of a launch, so a test that skipped the refresh would silently keep
+    reading whatever an earlier test left behind.
+    """
+    _SETTINGS[key] = value
+    _settings.refresh()
+
+
+@pytest.fixture(autouse=True)
+def _isolate_settings():
+    """No test inherits another's settings, in either direction."""
+    original = dict(_SETTINGS)
+    _settings.refresh()
+    yield
+    _SETTINGS.clear()
+    _SETTINGS.update(original)
+    _settings.refresh()

@@ -15,8 +15,8 @@ from resources.lib.localdb import *
 
 class NextAired:
     def __init__(self):
-        utc_date = arrow.utcnow()
-        local_date = utc_date.to(TIMEZONE)
+        utc_date = datetime.datetime.now(datetime.timezone.utc)
+        local_date = utc_date.astimezone()
         self.date_today = utc_date.strftime("%Y-%m-%d")
 
         local_media = get_local_media()
@@ -35,7 +35,7 @@ class NextAired:
             tmp_day = local_date
             for i in range(7):
                 self.valid_days.append(tmp_day.strftime("%Y-%m-%d"))
-                tmp_day = tmp_day.shift(days=1)
+                tmp_day = tmp_day + datetime.timedelta(days=1)
 
             airing_items = {}
             airing_items["week"] = []
@@ -81,7 +81,7 @@ class NextAired:
             "/calendars/all/shows/"
             + self.date_today
             + "/8?extended=full&countries="
-            + COUNTRY_CODE.lower()
+            + country_code().lower()
             + "%2Cus"
         )
 
@@ -123,7 +123,7 @@ class NextAired:
                     ):
                         episode_cache_key = (
                             "nextaired_tmdb_episode_"
-                            + COUNTRY_CODE
+                            + country_code()
                             + "_"
                             + str(tmdb_id_episode)
                         )

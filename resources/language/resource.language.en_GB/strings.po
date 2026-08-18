@@ -319,3 +319,171 @@ msgstr ""
 msgctxt "#32059"
 msgid "Next airing episodes of your TV show library"
 msgstr ""
+
+# Settings schema v1 (categories, shortened labels, help text).
+#
+# These are new ids rather than edits to the ids above on purpose: 70-odd
+# strings.po files carry translations of the existing English text, and
+# rewriting an msgid in place would leave every one of them silently wrong.
+# Where an existing label was already short enough to keep (32003, 32023,
+# 32024, 32027, 32041, 32044, 32045, 32047) it is reused and only gains help.
+
+#: /resources/settings.xml
+msgctxt "#32060"
+msgid "General"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32061"
+msgid "Skin"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32062"
+msgid "API keys"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32063"
+msgid "Advanced"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32064"
+msgid "Person credits"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32065"
+msgid "Lists"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32066"
+msgid "Buttons a skin can offer for this add-on on its home screen. Only skins that read these follow them; stock Estuary hard-codes its own and will not."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32068"
+msgid "Next aired"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32069"
+msgid "Hide appearances as themselves"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32070"
+msgid "Hide documentaries"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32071"
+msgid "Enable caching"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32072"
+msgid "The language TheMovieDB returns titles, plots and artwork in. English is used wherever a translation is missing."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32073"
+msgid "Which country's age certification and cinema release dates are shown."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32074"
+msgid "The bundled key is shared by everyone who uses this add-on. Enter your own from themoviedb.org if listings start failing."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32075"
+msgid "Optional. Adds IMDb, Rotten Tomatoes and Metacritic ratings and awards to movie pages. Get a free key at omdbapi.com."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32076"
+msgid "Used only by Next aired. The bundled key is shared by everyone who uses this add-on and is currently rate limited, so Next aired may stay empty until you enter your own from trakt.tv."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32077"
+msgid "Drops reality, talk and news shows from a person's credits, along with shows TheMovieDB has given no genre at all."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32078"
+msgid "Drops credits where the person appears as themselves rather than playing a part: documentary interviews, narration, presenting and archive footage."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32079"
+msgid "Drops documentaries from a person's credits entirely, including parts they genuinely played. Leave this off to keep those and use the setting above to hide only the appearances."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32080"
+msgid "Films already listed under Collection are not repeated under Similar."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32081"
+msgid "Hides films and shows that have not been released yet."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32082"
+msgid "How far ahead still counts as released. Anything further away than this is hidden."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32083"
+msgid "Caching keeps TheMovieDB responses and the index of your own library on disk. Turning it off makes every page slow and is only useful for debugging."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32084"
+msgid "Adds an Embuary Info entry to the context menu of your video library."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32085"
+msgid "Language, certification, and what gets filtered out of the lists."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32086"
+msgid "TheMovieDB"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32088"
+msgid "Keys for the services this add-on reads from. The bundled keys are shared by everyone who uses it."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32089"
+msgid "OMDb"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32090"
+msgid "Trakt.tv"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32091"
+msgid "Caching, and the optional context menu add-on."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32092"
+msgid "Hide posthumous releases"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32093"
+msgid "Hides credits released after the person died. A credit with no release date is kept, since an unknown date is not evidence either way."
+msgstr ""
