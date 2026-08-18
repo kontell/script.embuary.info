@@ -11,11 +11,11 @@ from resources.lib.nextaired import *
 ########################
 
 
-def publish_menu_entries():
-    """Mirror the menu settings onto window properties, for skins.
+def publish_menu_buttons():
+    """Mirror the button settings onto window properties, for skins.
 
     A skin cannot gate a button on an add-on setting: <visible> has no way to
-    read one, and the whole expression fails to parse if you try. So each entry
+    read one, and the whole expression fails to parse if you try. So each button
     is published on Window(Home) as `embuary.menu.<name>` and a skin gates on
 
         String.IsEqual(Window(Home).Property(embuary.menu.nextaired),true)
@@ -27,7 +27,7 @@ def publish_menu_entries():
     A skin only ever tests for "true", and clearing leaves nothing stale behind
     for the next thing that reads the property.
     """
-    for name in MENU_ENTRIES:
+    for name in MENU_BUTTONS:
         key = MENU_PROPERTY % name
 
         if menu_enabled(name):
@@ -69,13 +69,13 @@ class Service(xbmc.Monitor):
         flipped, rather than at the next Kodi start.
         """
         refresh()
-        publish_menu_entries()
+        publish_menu_buttons()
 
 
 if __name__ == "__main__":
     """Fetch next airing items on Kodi startup"""
     refresh()
-    publish_menu_entries()
+    publish_menu_buttons()
 
     if condition("Library.HasContent(TVShows)") and cache_enabled():
         log("Refreshing next airing database", force=True)

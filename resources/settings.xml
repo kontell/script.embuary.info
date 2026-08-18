@@ -164,19 +164,14 @@
 				</setting>
 			</group>
 		</category>
-		<category id="skin" label="32061" help="32087">
-			<group id="1" label="32066">
-				<setting id="menu_discover" type="boolean" label="32049">
+		<category id="skin" label="32061" help="32066">
+			<group id="1">
+				<setting id="menu_now_playing" type="boolean" label="32030">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
-				<setting id="menu_movie" type="boolean" label="342">
-					<level>0</level>
-					<default>true</default>
-					<control type="toggle"/>
-				</setting>
-				<setting id="menu_tv" type="boolean" label="20343">
+				<setting id="menu_upcoming" type="boolean" label="32031">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
@@ -187,18 +182,6 @@
 					<control type="toggle"/>
 				</setting>
 				<setting id="menu_search" type="boolean" label="137">
-					<level>0</level>
-					<default>true</default>
-					<control type="toggle"/>
-				</setting>
-			</group>
-			<group id="2" label="32067">
-				<setting id="menu_now_playing" type="boolean" label="32030">
-					<level>0</level>
-					<default>true</default>
-					<control type="toggle"/>
-				</setting>
-				<setting id="menu_upcoming" type="boolean" label="32031">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
