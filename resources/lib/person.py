@@ -3,6 +3,7 @@
 
 ########################
 
+import re
 import sys
 import xbmc
 import xbmcgui
@@ -12,7 +13,82 @@ from resources.lib.tmdb import *
 
 ########################
 
+""" TMDb genre ids. 99 is Documentary and means the same thing for movies and
+    for TV; the blacklist is TV-only -- news, reality, talk.
+"""
+GENRE_DOCUMENTARY = 99
 FILTER_SHOWS_BLACKLIST = [10763, 10764, 10767]
+
+""" How TMDb writes a credit for someone who turned up as themselves.
+
+    Upstream tested for `himself` or `herself` as substrings and nothing else,
+    which is why so many appearances got through: TMDb writes these at least a
+    dozen ways -- `Self`, `Themselves`, `Self - Host`, `Himself - Narrator`,
+    `Self (archive footage)`, `Interviewee` -- and leaves the character blank
+    entirely more often than it fills it in.
+
+    Word boundaries are the point, not decoration. A substring test for `self`
+    matches `Selfish`, and for `host` matches `Ghostbuster`; both are ordinary
+    character names. `himself` and `herself` are listed in their own right
+    because `\bself\b` does not match inside them.
+
+    The trailing lookahead is there because a word boundary alone is not quite
+    enough: an apostrophe is a non-word character, so `\bnarrator\b` matches
+    `Narrator's Brother` -- a part someone played, not an appearance.
+"""
+SELF_CREDIT = re.compile(
+    r"\b("
+    r"self|selves|himself|herself|themself|themselves|"
+    r"narrator|narration|host|hostess|presenter|"
+    r"interviewer|interviewee|commentator|moderator|"
+    r"archive footage|archival footage"
+    r")\b(?!['’]s)",
+    re.IGNORECASE,
+)
+
+########################
+
+
+def is_documentary(item):
+    """Whether a person credit is for a documentary."""
+    return GENRE_DOCUMENTARY in (item.get("genre_ids") or ())
+
+
+def is_appearance(item):
+    """Whether a credit is an appearance rather than a part the person played.
+
+    Only documentaries are judged. Outside genre 99 a character called `Host`
+    or `Narrator` is a role like any other, and filtering on the word alone
+    would quietly eat real credits.
+
+    A documentary credit with no character at all counts as an appearance.
+    That is the case upstream could not reach at all: it read the character
+    only when there was one, and TMDb leaves it blank for most talking-head
+    credits.
+    """
+    if not is_documentary(item):
+        return False
+
+    character = (item.get("character") or "").strip()
+
+    if not character:
+        return True
+
+    return bool(SELF_CREDIT.search(character))
+
+
+def skip_credit(item):
+    """Whether the two documentary settings hide this credit between them.
+
+    Kept as one function because both lists ask the same question, and because
+    the order matters: hiding documentaries outright subsumes hiding the
+    appearances within them.
+    """
+    if filter_documentaries() and is_documentary(item):
+        return True
+
+    return filter_movies() and is_appearance(item)
+
 
 ########################
 
@@ -93,18 +169,10 @@ class TMDBPersons(object):
         for item in movies:
             skip_movie = False
 
-            """ Filter to only show real movies and to skip documentaries / behind the scenes / etc
+            """ Filter out documentaries, and appearances within them
             """
-            if filter_movies():
-                character = item.get("character")
-                if character:
-                    for genre in item["genre_ids"]:
-                        if genre == 99 and (
-                            "himself" in character.lower()
-                            or "herself" in character.lower()
-                        ):
-                            skip_movie = True
-                            break
+            if skip_credit(item):
+                skip_movie = True
 
             """ Filter to hide in production or rumored future movies
             """
@@ -138,13 +206,24 @@ class TMDBPersons(object):
             """ Filter to only show real TV series and to skip talk, reality or news shows
             """
             if filter_shows():
-                if not item["genre_ids"]:
+                genre_ids = item.get("genre_ids")
+
+                if not genre_ids:
                     skip_show = True
                 else:
-                    for genre in item["genre_ids"]:
+                    for genre in genre_ids:
                         if genre in FILTER_SHOWS_BLACKLIST:
                             skip_show = True
                             break
+
+            """ Filter out documentary series, and appearances within them.
+
+                Upstream never character-filtered TV credits at all, so a
+                person's list carried every documentary series they had ever
+                been interviewed for however the movie setting was set.
+            """
+            if skip_credit(item):
+                skip_show = True
 
             """ Filter to hide in production or rumored future shows
             """
