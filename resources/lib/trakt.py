@@ -4,7 +4,6 @@
 ########################
 
 import xbmc
-import requests
 
 from resources.lib.helper import *
 

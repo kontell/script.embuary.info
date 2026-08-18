@@ -6,7 +6,6 @@
 import sys
 import xbmc
 import xbmcgui
-import requests
 
 from collections import OrderedDict
 
@@ -60,10 +59,9 @@ def filter_live_videos(videos):
     working one because the network hiccuped -- and upstream's version did
     exactly that, since an exception propagated out and lost the whole list.
 
-    The shared SESSION is used across the pool. requests.Session is documented
-    as not thread-safe, but what that warns about is concurrent mutation of
-    session state; the connection pool underneath is thread-safe, and these
-    requests only read. Nothing here sets headers, auth or cookies.
+    The shared SESSION is used across the pool, which its connection pool is
+    built for: handing a connection out removes it from the pool, so no two
+    threads can ever hold the same one.
     """
     if not videos:
         return []
@@ -80,7 +78,7 @@ def filter_live_videos(videos):
                 "https://img.youtube.com/vi/%s/0.jpg" % str(item["key"]),
                 timeout=HTTP_TIMEOUT,
             )
-            return request.status_code == requests.codes.ok
+            return request.status_code == 200
 
         except Exception:
             return True

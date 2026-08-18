@@ -5,7 +5,6 @@
 
 import xbmc
 import xbmcgui
-import requests
 import datetime
 from urllib.parse import urlencode
 

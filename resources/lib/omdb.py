@@ -5,7 +5,6 @@
 
 import json
 import sys
-import requests
 from urllib.parse import quote
 
 from resources.lib.helper import *
