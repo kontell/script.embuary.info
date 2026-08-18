@@ -409,8 +409,8 @@
 								     include carries its own +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>22</left>
-									<top>339</top>
+									<left>34</left>
+									<top>327</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
@@ -533,8 +533,8 @@
 								     include carries its own +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>22</left>
-									<top>339</top>
+									<left>34</left>
+									<top>327</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
@@ -673,8 +673,8 @@
 								     include carries its own +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>22</left>
-									<top>339</top>
+									<left>34</left>
+									<top>327</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
@@ -797,8 +797,8 @@
 								     include carries its own +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>22</left>
-									<top>339</top>
+									<left>34</left>
+									<top>327</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
