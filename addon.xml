@@ -22,7 +22,7 @@
 
   The display name says (Kontell) so nobody files our bugs against sualfred.
 -->
-<addon id="script.embuary.info" name="Embuary Info (Kontell)" version="2.1.0" provider-name="kontell">
+<addon id="script.embuary.info" name="Embuary Info (Kontell)" version="2.2.0" provider-name="kontell">
     <!--
       script.module.requests is gone: nothing imports it any more. Its 825 ms
       import was the largest single cost in opening a page, and what it was
@@ -89,16 +89,25 @@
             <icon>resources/icon.png</icon>
             <fanart>resources/fanart.jpg</fanart>
         </assets>
-        <news>v2.1.0
-- Fork of sualfred's Embuary Info, based on the unreleased upstream 2.0.10.
-- Fixed the memory growth that could push Kodi into an out-of-memory kill on
-  memory-constrained devices: browsing many pages in one session kept every
-  dialog resident. Measured on an Android TV box, seven pages held 983 MB of
-  GPU memory and 2.1 GB total; the stack is now bounded.
-- Artwork is requested at a size the display can use instead of TMDb's
-  "original": 4.0 MB to open a page instead of 20.0 MB.
-- Faster page loads: connection reuse, parallel trailer checks, and indexed
-  local-library matching instead of a linear scan per item.
+        <news>v2.2.0
+- Settings are now four tabs -- General, Skin, API keys, Advanced -- with the
+  descriptions moved out of the labels into help text. Existing settings keep
+  their values.
+- Appearances as themselves are recognised however TheMovieDB spells them. The
+  old check matched only "himself" and "herself", and only when a character was
+  filled in at all, so it caught none of Tom Hanks' 114 documentary credits.
+  Genuine roles are kept: named voice parts in documentaries stay.
+- The same filter now applies to TV credits, which were never filtered.
+- New settings to hide documentaries outright, and to hide releases a person did
+  not live to see.
+- Posters in the Similar, Collection, Seasons, Movies and TV shows rows show the
+  rating, drawn with the current skin's own badge.
+- New Skin tab with a toggle per button a skin offers for this add-on, and a new
+  Search button among them.
+- Opening a page is much faster: 1.9s to 0.6s warm and 2.4s to 1.4s cold on a
+  desktop. Most of what went was import cost paid on every single launch.
+- Fixed: with an OMDb key set, every movie page made three OMDb requests, cached
+  none of them, and never filled in the retail date.
 </news>
         <summary lang="en_GB">Embuary Info Script (Kontell fork)</summary>
         <summary lang="de_DE">Embuary Info Script (Kontell-Fork)</summary>
