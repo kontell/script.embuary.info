@@ -13,6 +13,12 @@ from resources.lib.main import *
 
 class Main:
     def __init__(self):
+        """Settings are memoised for the length of one launch, so every launch
+        has to say where it begins. Under <reuselanguageinvoker> the modules
+        above are imported once and this is the only code that runs again.
+        """
+        refresh()
+
         self.call = False
         self._parse_argv()
 

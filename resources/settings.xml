@@ -1,22 +1,259 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<settings>
-	<category label="128">
-                <setting label="TheMovieDB" type="lsep"/>
-                <setting label="$ADDON[script.embuary.info 32024]" type="select" values="ar-AE|ar-SA|bg|bn|ca|ch|cs|da|de|el|en|eo|es-ES|es-MX|eu|fa|fi|fr-CA|fr-FR|he|hi|hu|id|it|ja|ka|kn|ko|lt|ml|nb|nl|no|pl|pt-BR|pt-PT|ro|ru|sk|sl|sr|sv|ta|te|th|tr|uk|vi|zh-CN|zh-TW" id="language_code" default="en"/>
-                <setting label="$ADDON[script.embuary.info 32003]" type="select" values="AU|BG|BR|CA|DE|DK|ES|FI|FR|GB|HU|IN|IT|KR|LT|MY|NL|NO|NZ|PH|PT|RU|SE|SK|TH|US" id="country_code" default="US"/>
-                <setting label="$ADDON[script.embuary.info 32023]" type="text" id="tmdb_api_key" default="fc168650632c6597038cf7072a7c20da"/>
-                <setting label="OMDB $ADDON[script.embuary.info 32002]" type="lsep"/>
-                <setting label="$ADDON[script.embuary.info 32023]" type="text" id="omdb_api_key"/>
-                <setting label="Trakt.tv" type="lsep"/>
-                <setting label="$ADDON[script.embuary.info 32023]" type="text" id="trakt_api_key" default="db17981042166c60e1642c483f5be54b12ec86e3401cd67c2514fdf6843a110f"/>
-                <setting label="$ADDON[script.embuary.info 32026]" type="lsep"/>
-                <setting label="$ADDON[script.embuary.info 32027]" type="bool" id="filter_shows" default="true"/>
-                <setting label="$ADDON[script.embuary.info 32028]" type="bool" id="filter_movies" default="false"/>
-                <setting label="$ADDON[script.embuary.info 32041]" type="bool" id="similar_movies_filter" default="false"/>
-                <setting label="$ADDON[script.embuary.info 32044]" type="bool" id="filter_upcoming" default="false"/>
-                <setting label="- $ADDON[script.embuary.info 32045]" type="slider" id="filter_daydelta" default="180" range="0,30,360" option="int" enable="eq(-1,true)"/>
-                <setting label="$ADDON[script.embuary.info 32047]" type="action" action="InstallAddon(context.embuary.info)" visible="!System.HasAddon(context.embuary.info)"/>
-                <setting label="$ADDON[script.embuary.info 32020]" type="lsep"/>
-                <setting label="$ADDON[script.embuary.info 32021]" type="bool" id="cache_enabled" default="true"/>
-        </category>
+<!--
+  Settings schema, format version 1.
+
+  Every id here is the id the old flat schema used. That is the whole
+  migration story: Kodi keys stored values by id in
+  addon_data/script.embuary.info/settings.xml, so an id that survives keeps
+  its value and an id that is renamed silently resets the user to default.
+  Verified on Kodi 21.3 against a value file holding non-default values for
+  all eleven pre-existing settings; see docs/measurements.md.
+
+  Labels that had a description crammed into them have been shortened and
+  the description moved to a help string. Where that changed the English
+  text, a NEW string id was allocated rather than editing the existing
+  msgid: 70-odd strings.po files carry translations of the current text,
+  and rewriting an msgid in place leaves every one of them silently wrong.
+-->
+<settings version="1">
+	<section id="script.embuary.info">
+		<category id="general" label="32060" help="32085">
+			<group id="1" label="32086">
+				<setting id="language_code" type="string" label="32024" help="32072">
+					<level>0</level>
+					<default>en</default>
+					<constraints>
+						<options>
+							<option label="ar-AE">ar-AE</option>
+							<option label="ar-SA">ar-SA</option>
+							<option label="bg">bg</option>
+							<option label="bn">bn</option>
+							<option label="ca">ca</option>
+							<option label="ch">ch</option>
+							<option label="cs">cs</option>
+							<option label="da">da</option>
+							<option label="de">de</option>
+							<option label="el">el</option>
+							<option label="en">en</option>
+							<option label="eo">eo</option>
+							<option label="es-ES">es-ES</option>
+							<option label="es-MX">es-MX</option>
+							<option label="eu">eu</option>
+							<option label="fa">fa</option>
+							<option label="fi">fi</option>
+							<option label="fr-CA">fr-CA</option>
+							<option label="fr-FR">fr-FR</option>
+							<option label="he">he</option>
+							<option label="hi">hi</option>
+							<option label="hu">hu</option>
+							<option label="id">id</option>
+							<option label="it">it</option>
+							<option label="ja">ja</option>
+							<option label="ka">ka</option>
+							<option label="kn">kn</option>
+							<option label="ko">ko</option>
+							<option label="lt">lt</option>
+							<option label="ml">ml</option>
+							<option label="nb">nb</option>
+							<option label="nl">nl</option>
+							<option label="no">no</option>
+							<option label="pl">pl</option>
+							<option label="pt-BR">pt-BR</option>
+							<option label="pt-PT">pt-PT</option>
+							<option label="ro">ro</option>
+							<option label="ru">ru</option>
+							<option label="sk">sk</option>
+							<option label="sl">sl</option>
+							<option label="sr">sr</option>
+							<option label="sv">sv</option>
+							<option label="ta">ta</option>
+							<option label="te">te</option>
+							<option label="th">th</option>
+							<option label="tr">tr</option>
+							<option label="uk">uk</option>
+							<option label="vi">vi</option>
+							<option label="zh-CN">zh-CN</option>
+							<option label="zh-TW">zh-TW</option>
+						</options>
+					</constraints>
+					<control type="list" format="string"/>
+				</setting>
+				<setting id="country_code" type="string" label="32003" help="32073">
+					<level>0</level>
+					<default>US</default>
+					<constraints>
+						<options>
+							<option label="AU">AU</option>
+							<option label="BG">BG</option>
+							<option label="BR">BR</option>
+							<option label="CA">CA</option>
+							<option label="DE">DE</option>
+							<option label="DK">DK</option>
+							<option label="ES">ES</option>
+							<option label="FI">FI</option>
+							<option label="FR">FR</option>
+							<option label="GB">GB</option>
+							<option label="HU">HU</option>
+							<option label="IN">IN</option>
+							<option label="IT">IT</option>
+							<option label="KR">KR</option>
+							<option label="LT">LT</option>
+							<option label="MY">MY</option>
+							<option label="NL">NL</option>
+							<option label="NO">NO</option>
+							<option label="NZ">NZ</option>
+							<option label="PH">PH</option>
+							<option label="PT">PT</option>
+							<option label="RU">RU</option>
+							<option label="SE">SE</option>
+							<option label="SK">SK</option>
+							<option label="TH">TH</option>
+							<option label="US">US</option>
+						</options>
+					</constraints>
+					<control type="list" format="string"/>
+				</setting>
+			</group>
+			<group id="2" label="32064">
+				<setting id="filter_shows" type="boolean" label="32027" help="32077">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="filter_movies" type="boolean" label="32069" help="32078">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="filter_documentaries" type="boolean" label="32070" help="32079">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+			<group id="3" label="32065">
+				<setting id="similar_movies_filter" type="boolean" label="32041" help="32080">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="filter_upcoming" type="boolean" label="32044" help="32081">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="filter_daydelta" type="integer" label="32045" help="32082">
+					<level>0</level>
+					<default>180</default>
+					<constraints>
+						<minimum>0</minimum>
+						<step>30</step>
+						<maximum>360</maximum>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<condition setting="filter_upcoming" operator="is">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="slider" format="integer"/>
+				</setting>
+			</group>
+		</category>
+		<category id="skin" label="32061" help="32087">
+			<group id="1" label="32066">
+				<setting id="menu_discover" type="boolean" label="32049">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="menu_movies" type="boolean" label="342">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="menu_tvshows" type="boolean" label="20343">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="menu_nextaired" type="boolean" label="32068">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="menu_search" type="boolean" label="137">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+			<group id="2" label="32067">
+				<setting id="menu_now_playing" type="boolean" label="32030">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="menu_upcoming" type="boolean" label="32031">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+		</category>
+		<category id="apikeys" label="32062" help="32088">
+			<group id="1" label="32086">
+				<setting id="tmdb_api_key" type="string" label="32023" help="32074">
+					<level>0</level>
+					<default>fc168650632c6597038cf7072a7c20da</default>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32023</heading>
+					</control>
+				</setting>
+			</group>
+			<group id="2" label="32089">
+				<setting id="omdb_api_key" type="string" label="32023" help="32075">
+					<level>0</level>
+					<default />
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32023</heading>
+					</control>
+				</setting>
+			</group>
+			<group id="3" label="32090">
+				<setting id="trakt_api_key" type="string" label="32023" help="32076">
+					<level>0</level>
+					<default>db17981042166c60e1642c483f5be54b12ec86e3401cd67c2514fdf6843a110f</default>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32023</heading>
+					</control>
+				</setting>
+			</group>
+		</category>
+		<category id="advanced" label="32063" help="32091">
+			<group id="1">
+				<setting id="cache_enabled" type="boolean" label="32071" help="32083">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="install_context_addon" type="action" label="32047" help="32084">
+					<level>0</level>
+					<data>InstallAddon(context.embuary.info)</data>
+					<control type="button" format="action">
+						<close>true</close>
+					</control>
+					<visible>!System.HasAddon(context.embuary.info)</visible>
+				</setting>
+			</group>
+		</category>
+	</section>
 </settings>

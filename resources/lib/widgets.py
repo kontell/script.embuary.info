@@ -527,7 +527,7 @@ def _category(content="", category="", call=None, info=None):
 
 
 def _query(content_type, call, get=None, params=None, get_details=False):
-    args = {"region": COUNTRY_CODE}
+    args = {"region": country_code()}
     if params:
         args.update(params)
 

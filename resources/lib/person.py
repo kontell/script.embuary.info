@@ -12,11 +12,7 @@ from resources.lib.tmdb import *
 
 ########################
 
-FILTER_MOVIES = ADDON.getSettingBool("filter_movies")
-FILTER_SHOWS = ADDON.getSettingBool("filter_shows")
 FILTER_SHOWS_BLACKLIST = [10763, 10764, 10767]
-FILTER_UPCOMING = ADDON.getSettingBool("filter_upcoming")
-FILTER_DAYDELTA = int(ADDON.getSetting("filter_daydelta"))
 
 ########################
 
@@ -99,7 +95,7 @@ class TMDBPersons(object):
 
             """ Filter to only show real movies and to skip documentaries / behind the scenes / etc
             """
-            if FILTER_MOVIES:
+            if filter_movies():
                 character = item.get("character")
                 if character:
                     for genre in item["genre_ids"]:
@@ -112,9 +108,9 @@ class TMDBPersons(object):
 
             """ Filter to hide in production or rumored future movies
             """
-            if FILTER_UPCOMING:
+            if filter_upcoming():
                 diff = date_delta(item.get("release_date", "2900-01-01"))
-                if diff.days > FILTER_DAYDELTA:
+                if diff.days > filter_daydelta():
                     skip_movie = True
 
             if not skip_movie and item["id"] not in duplicate_handler:
@@ -141,7 +137,7 @@ class TMDBPersons(object):
 
             """ Filter to only show real TV series and to skip talk, reality or news shows
             """
-            if FILTER_SHOWS:
+            if filter_shows():
                 if not item["genre_ids"]:
                     skip_show = True
                 else:
@@ -152,9 +148,9 @@ class TMDBPersons(object):
 
             """ Filter to hide in production or rumored future shows
             """
-            if FILTER_UPCOMING:
+            if filter_upcoming():
                 diff = date_delta(item.get("first_air_date", "2900-01-01"))
-                if diff.days > FILTER_DAYDELTA:
+                if diff.days > filter_daydelta():
                     skip_show = True
 
             if not skip_show and item["id"] not in duplicate_handler:

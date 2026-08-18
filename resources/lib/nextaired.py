@@ -81,7 +81,7 @@ class NextAired:
             "/calendars/all/shows/"
             + self.date_today
             + "/8?extended=full&countries="
-            + COUNTRY_CODE.lower()
+            + country_code().lower()
             + "%2Cus"
         )
 
@@ -123,7 +123,7 @@ class NextAired:
                     ):
                         episode_cache_key = (
                             "nextaired_tmdb_episode_"
-                            + COUNTRY_CODE
+                            + country_code()
                             + "_"
                             + str(tmdb_id_episode)
                         )

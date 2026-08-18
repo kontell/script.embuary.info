@@ -16,10 +16,6 @@ from resources.lib.tmdb import *
 
 ########################
 
-SIMILAR_FILTER = ADDON.getSettingBool("similar_movies_filter")
-FILTER_UPCOMING = ADDON.getSettingBool("filter_upcoming")
-FILTER_DAYDELTA = int(ADDON.getSetting("filter_daydelta"))
-
 """ Concurrency for the trailer liveness check. These are latency-bound HEAD
     requests to one host, so a small pool saturates the useful parallelism;
     going wider mostly annoys YouTube.
@@ -253,15 +249,15 @@ class TMDBVideos(object):
 
                 for item in set_items:
                     """Filter to hide in production or rumored future movies"""
-                    if FILTER_UPCOMING:
+                    if filter_upcoming():
                         diff = date_delta(item.get("release_date", "2900-01-01"))
-                        if diff.days > FILTER_DAYDELTA:
+                        if diff.days > filter_daydelta():
                             continue
 
                     list_item, is_local = tmdb_handle_movie(item, self.local_movies)
                     li.append(list_item)
 
-                    if SIMILAR_FILTER:
+                    if similar_movies_filter():
                         self.similar_duplicate_handler.add(item["id"])
 
             """ Don't show sets with only 1 item
@@ -281,14 +277,17 @@ class TMDBVideos(object):
 
             for item in similar:
                 """Filter to hide item if it's part of the collection"""
-                if SIMILAR_FILTER and item["id"] in self.similar_duplicate_handler:
+                if (
+                    similar_movies_filter()
+                    and item["id"] in self.similar_duplicate_handler
+                ):
                     continue
 
                 """ Filter to hide in production or rumored future movies
                 """
-                if FILTER_UPCOMING:
+                if filter_upcoming():
                     diff = date_delta(item.get("release_date", "2900-01-01"))
-                    if diff.days > FILTER_DAYDELTA:
+                    if diff.days > filter_daydelta():
                         continue
 
                 list_item, is_local = tmdb_handle_movie(item, self.local_movies)
@@ -299,9 +298,9 @@ class TMDBVideos(object):
 
             for item in similar:
                 """Filter to hide in production or rumored future shows"""
-                if FILTER_UPCOMING:
+                if filter_upcoming():
                     diff = date_delta(item.get("first_air_date", "2900-01-01"))
-                    if diff.days > FILTER_DAYDELTA:
+                    if diff.days > filter_daydelta():
                         continue
 
                 list_item, is_local = tmdb_handle_tvshow(item, self.local_shows)
@@ -320,7 +319,7 @@ class TMDBVideos(object):
                 action=self.call,
                 call=self.tmdb_id,
                 get="images",
-                params={"include_image_language": "%s,en,null" % DEFAULT_LANGUAGE},
+                params={"include_image_language": "%s,en,null" % language_code()},
             )
 
             write_cache(cache_key, images)
@@ -345,7 +344,7 @@ class TMDBVideos(object):
 
             """ Add EN videos next to the user configured language
             """
-            if DEFAULT_LANGUAGE != FALLBACK_LANGUAGE:
+            if language_code() != FALLBACK_LANGUAGE:
                 videos_en = tmdb_query(
                     action=self.call,
                     call=self.tmdb_id,

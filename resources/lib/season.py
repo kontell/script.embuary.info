@@ -37,7 +37,7 @@ class TMDBSeasons(object):
             if not self.details:
                 return
 
-            if DEFAULT_LANGUAGE != FALLBACK_LANGUAGE and not self.details["overview"]:
+            if language_code() != FALLBACK_LANGUAGE and not self.details["overview"]:
                 fallback_details = tmdb_query(
                     action="tv",
                     call=self.tmdb_id,
@@ -128,7 +128,7 @@ class TMDBSeasons(object):
                 get="season",
                 get2=self.season,
                 get3="images",
-                params={"include_image_language": "%s,en,null" % DEFAULT_LANGUAGE},
+                params={"include_image_language": "%s,en,null" % language_code()},
             )
 
             write_cache(cache_key, images)

@@ -14,16 +14,12 @@ from resources.lib.helper import *
 
 ########################
 
-OMDB_API_KEY = ADDON.getSettingString("omdb_api_key")
-
-########################
-
 
 def omdb_api(imdbnumber=None, title=None, year=None, content_type=None):
     if imdbnumber:
         url = (
             "http://www.omdbapi.com/?apikey=%s&i=%s&plot=short&r=xml&tomatoes=true"
-            % (OMDB_API_KEY, imdbnumber)
+            % (omdb_api_key(), imdbnumber)
         )
 
     elif title and year and content_type:
@@ -42,7 +38,7 @@ def omdb_api(imdbnumber=None, title=None, year=None, content_type=None):
 
         url = (
             "http://www.omdbapi.com/?apikey=%s&t=%s&year=%s&plot=short&r=xml&tomatoes=true"
-            % (OMDB_API_KEY, title, year)
+            % (omdb_api_key(), title, year)
         )
 
     else:
@@ -52,7 +48,7 @@ def omdb_api(imdbnumber=None, title=None, year=None, content_type=None):
     if omdb:
         return omdb
 
-    elif OMDB_API_KEY:
+    elif omdb_api_key():
         omdb = {}
 
         for i in range(1, 4):  # loop if heavy server load

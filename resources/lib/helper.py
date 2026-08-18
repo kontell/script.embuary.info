@@ -4,7 +4,6 @@
 ########################
 
 import xbmc
-import xbmcaddon
 import xbmcgui
 import xbmcplugin
 import json
@@ -18,9 +17,11 @@ import requests
 import simplecache
 import hashlib
 
+from resources.lib.settings import *
+
 ########################
 
-ADDON = xbmcaddon.Addon()
+ADDON = addon()
 ADDON_ID = ADDON.getAddonInfo("id")
 ADDON_VERSION = ADDON.getAddonInfo("version")
 ADDON_PATH = ADDON.getAddonInfo("path")
@@ -62,17 +63,11 @@ SESSION.mount("http://", _ADAPTER)
 """
 HTTP_TIMEOUT = 5
 
-COUNTRY_CODE = ADDON.getSettingString("country_code")
-DEFAULT_LANGUAGE = ADDON.getSettingString("language_code")
 FALLBACK_LANGUAGE = "en"
 
 CACHE = simplecache.SimpleCache()
 CACHE.enable_mem_cache = False
 CACHE.data_is_json = True
-CACHE_ENABLED = ADDON.getSettingBool("cache_enabled")
-CACHE_PREFIX = (
-    ADDON_ID + "_" + ADDON_VERSION + "_" + DEFAULT_LANGUAGE + COUNTRY_CODE + "_"
-)
 
 # TIMEZONE = 'US/Alaska'
 TIMEZONE = "local"
@@ -91,15 +86,27 @@ def log(txt, loglevel=DEBUG, json=False, force=False):
     xbmc.log(msg=message, level=loglevel)
 
 
+def cache_prefix():
+    """Namespace for this add-on's cache keys.
+
+    Language and country are part of it because the cached payloads are
+    language- and region-specific, so changing either has to miss rather than
+    serve the previous locale's data. That is also why it is derived per call
+    now: it used to be a module constant, which under interpreter reuse would
+    keep naming the locale the first launch happened to see.
+    """
+    return "%s_%s_%s%s_" % (ADDON_ID, ADDON_VERSION, language_code(), country_code())
+
+
 def get_cache(key):
-    if CACHE_ENABLED:
-        return CACHE.get(CACHE_PREFIX + key)
+    if cache_enabled():
+        return CACHE.get(cache_prefix() + key)
 
 
 def write_cache(key, data, cache_time=336):
     if data:
         CACHE.set(
-            CACHE_PREFIX + key, data, expiration=datetime.timedelta(hours=cache_time)
+            cache_prefix() + key, data, expiration=datetime.timedelta(hours=cache_time)
         )
 
 

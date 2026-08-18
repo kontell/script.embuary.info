@@ -21,21 +21,34 @@ class Service(xbmc.Monitor):
     """
 
     def onNotification(self, sender, method, data):
-        if method in [
-            "VideoLibrary.OnUpdate",
-            "VideoLibrary.OnScanFinished",
-            "VideoLibrary.OnCleanFinished",
-        ] and ADDON.getSettingBool("cache_enabled"):
+        if (
+            method
+            in [
+                "VideoLibrary.OnUpdate",
+                "VideoLibrary.OnScanFinished",
+                "VideoLibrary.OnCleanFinished",
+            ]
+            and cache_enabled()
+        ):
             execute(
                 "AlarmClock(EmbuaryInfoRefreshLibraryCache,RunScript(script.embuary.info,call=refresh_library_cache),00:05,silent)"
             )
 
+    def onSettingsChanged(self):
+        """Drop memoised settings.
+
+        This process outlives every launch of the script and the plugin, so it
+        is the one place where a value read minutes ago is not necessarily the
+        value the user is now looking at in the settings dialog.
+        """
+        refresh()
+
 
 if __name__ == "__main__":
     """Fetch next airing items on Kodi startup"""
-    if condition("Library.HasContent(TVShows)") and ADDON.getSettingBool(
-        "cache_enabled"
-    ):
+    refresh()
+
+    if condition("Library.HasContent(TVShows)") and cache_enabled():
         log("Refreshing next airing database", force=True)
         NextAired()
         log("Finished next airing database refreshing", force=True)
