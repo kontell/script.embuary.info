@@ -122,15 +122,7 @@ plugin = routing.Plugin()
 # entrypoint
 @plugin.route("/")
 def index():
-    """The add-on root, minus whatever the Skin settings hide.
-
-    This is the source of truth the skin buttons follow: MENU_ROOT is named
-    after these keys precisely so there is no second list to keep in step.
-    """
-    for i in MENU_ROOT:
-        if not menu_enabled(i):
-            continue
-
+    for i in ["discover", "movie", "tv", "nextaired", "search"]:
         item = INDEX_MENU[i]
         li_item = ListItem(item["name"])
         li_item.setArt(DEFAULT_ART)

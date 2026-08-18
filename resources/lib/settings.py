@@ -189,28 +189,30 @@ def cache_enabled():
 
 
 ########################
-""" Menu entries.
+""" The buttons a skin can draw for this add-on.
 
-    Each of these is one entry the add-on offers, and the Skin category has a
-    toggle per entry. The add-on root honours them directly; a skin cannot,
-    because a <visible> condition has no way to read an add-on setting -- so the
-    service mirrors each onto a window property for skins to gate on. See
-    service.py.
+    These are not entries in the add-on's own menu; that menu always lists
+    everything. They are the shortcuts a skin puts on its home screen, and each
+    one has a toggle because otherwise the only way to remove one is to edit the
+    skin. skin.contuary and stock skin.estuary both hard-code three of them:
 
-    MENU_ROOT are entries in the add-on's own root listing, named after the
-    INDEX_MENU keys in widgets.py so that the root listing needs no mapping
-    table to filter itself. MENU_BUTTONS are deep links that exist only as
-    buttons a skin draws -- there is no root entry to hide, which is why they
-    are listed separately.
+        now_playing  ->  plugin://script.embuary.info/movie/now_playing
+        upcoming     ->  plugin://script.embuary.info/movie/upcoming
+        nextaired    ->  plugin://script.embuary.info/nextaired
+
+    `search` is the fourth, and new. It fires the search dialog rather than
+    opening a listing, so a skin wants RunPlugin for it, not ActivateWindow.
+
+    A skin cannot read an add-on setting -- a <visible> condition has no way to
+    reach one, and trying fails the whole expression -- so the service mirrors
+    each of these onto a window property. See service.py.
 """
 
-MENU_ROOT = ("discover", "movie", "tv", "nextaired", "search")
-MENU_BUTTONS = ("now_playing", "upcoming")
-MENU_ENTRIES = MENU_ROOT + MENU_BUTTONS
+MENU_BUTTONS = ("now_playing", "upcoming", "nextaired", "search")
 
 MENU_PROPERTY = "embuary.menu.%s"
 
 
 def menu_enabled(name):
-    """Whether one menu entry is on offer."""
+    """Whether one skin button is on offer."""
     return _bool("menu_%s" % name)

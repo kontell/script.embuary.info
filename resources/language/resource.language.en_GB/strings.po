@@ -360,12 +360,7 @@ msgstr ""
 
 #: /resources/settings.xml
 msgctxt "#32066"
-msgid "Menu entries"
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32067"
-msgid "Skin buttons"
+msgid "Buttons a skin can offer for this add-on on its home screen. Only skins that read these follow them; stock Estuary hard-codes its own and will not."
 msgstr ""
 
 #: /resources/settings.xml
@@ -461,11 +456,6 @@ msgstr ""
 #: /resources/settings.xml
 msgctxt "#32086"
 msgid "TheMovieDB"
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32087"
-msgid "Which entries this add-on offers. Skins that build buttons out of these entries follow them; stock Estuary hard-codes its own and will not."
 msgstr ""
 
 #: /resources/settings.xml
