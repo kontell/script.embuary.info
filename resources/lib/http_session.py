@@ -3,9 +3,7 @@
 
 ########################
 
-import http.client
 import json
-import ssl
 import threading
 import zlib
 
@@ -42,6 +40,40 @@ from urllib.parse import urljoin, urlsplit
     call sites do a plain GET or HEAD and read a body -- and each one is a way
     for this to become the thing it replaced.
 """
+
+""" http.client and ssl are imported on the first request rather than at module
+    scope, and the SSL context is built with them.
+
+    Measured on the Android TV box this add-on exists for: importing this module
+    cost 96 ms of a 600 ms page open, nearly all of it `ssl` loading OpenSSL and
+    reading the system trust store. A page whose TheMovieDB responses are already
+    cached makes no request at all, so that was the transport being paid for and
+    never used -- the same shape as the xml.etree and concurrent.futures imports
+    already deferred into the paths that need them.
+
+    Guarded by a lock because the trailer check builds its pool of threads
+    before any of them has made a request, so several can arrive here at once.
+"""
+_transport_lock = threading.Lock()
+_client = None
+_ssl = None
+
+
+def _transport():
+    """The http.client and ssl modules, imported on first use."""
+    global _client, _ssl
+
+    if _client is None:
+        with _transport_lock:
+            if _client is None:
+                import http.client
+                import ssl
+
+                _ssl = ssl
+                _client = http.client
+
+    return _client, _ssl
+
 
 DEFAULT_TIMEOUT = 5
 
@@ -124,7 +156,7 @@ class HttpSession(object):
         """
         self._idle = {}
         self._lock = threading.Lock()
-        self._context = ssl.create_default_context()
+        self._context = None
 
     def get(self, url, timeout=DEFAULT_TIMEOUT, headers=None):
         return self.request("GET", url, timeout=timeout, headers=headers)
@@ -236,13 +268,17 @@ class HttpSession(object):
                 return pool.pop(), True
 
         scheme, host, port = key
+        client, ssl_module = _transport()
 
         if scheme == "https":
-            connection = http.client.HTTPSConnection(
+            if self._context is None:
+                self._context = ssl_module.create_default_context()
+
+            connection = client.HTTPSConnection(
                 host, port, timeout=timeout, context=self._context
             )
         else:
-            connection = http.client.HTTPConnection(host, port, timeout=timeout)
+            connection = client.HTTPConnection(host, port, timeout=timeout)
 
         return connection, False
 
