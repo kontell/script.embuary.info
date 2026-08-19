@@ -497,3 +497,13 @@ msgstr ""
 msgctxt "#32095"
 msgid "Hides films and shows TheMovieDB rates below this. Zero keeps everything. Something nobody has voted on yet has no rating rather than a bad one, so it is kept."
 msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32096"
+msgid "Hide items with fewer votes than"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32097"
+msgid "Hides films and shows with fewer TheMovieDB votes than this. Zero keeps everything. Unlike the rating above, something nobody has voted on really does have no votes, so this is what hides the obscure and the unreleased."
+msgstr ""

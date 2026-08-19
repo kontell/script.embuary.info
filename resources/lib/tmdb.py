@@ -362,6 +362,36 @@ def is_below_rating(item):
         return False
 
 
+def is_below_votes(item):
+    """Whether the item has fewer TheMovieDB votes than the threshold.
+
+    A missing vote_count counts as zero and is hidden, which is the opposite of
+    how is_below_rating treats a missing score -- and deliberately so. An unrated
+    item's 0.0 is ambiguous, but "nobody has voted" is not: no votes really is
+    fewer than any threshold above zero. This is the setting that hides the
+    obscure and the unreleased, and the rating one is not.
+    """
+    minimum = filter_votes()
+
+    if minimum <= 0:
+        return False
+
+    try:
+        return int(item.get("vote_count") or 0) < minimum
+
+    except (TypeError, ValueError):
+        return False
+
+
+def below_thresholds(item):
+    """Whether either popularity threshold hides this item.
+
+    One call so the four lists that filter cannot drift apart on which of the
+    two they remembered to ask about.
+    """
+    return is_below_rating(item) or is_below_votes(item)
+
+
 def tmdb_error(message=ADDON.getLocalizedString(32019)):
     busydialog(close=True)
     DIALOG.ok(ADDON.getLocalizedString(32000), str(message))

@@ -15,7 +15,7 @@ import pytest
 
 from conftest import set_setting
 
-from resources.lib.tmdb import is_below_rating
+from resources.lib.tmdb import below_thresholds, is_below_rating, is_below_votes
 
 from resources.lib.person import (
     GENRE_DOCUMENTARY,
@@ -336,3 +336,67 @@ def test_the_rating_filter_composes_with_the_others():
 
     assert not skip_credit(good)
     assert skip_credit(bad)
+
+
+########################
+""" is_below_votes
+"""
+
+
+def test_zero_votes_threshold_keeps_everything():
+    set_setting("filter_votes", "0")
+
+    assert not is_below_votes(rated(8.0, votes=0))
+    assert not is_below_votes(rated(8.0, votes=3))
+
+
+def test_hides_anything_with_fewer_votes():
+    set_setting("filter_votes", "500")
+
+    assert is_below_votes(rated(9.9, votes=499))
+    assert is_below_votes(rated(9.9, votes=0))
+    assert not is_below_votes(rated(1.0, votes=500))
+    assert not is_below_votes(rated(1.0, votes=5000))
+
+
+def test_no_votes_at_all_is_below_any_threshold():
+    """The deliberate difference from the rating filter. An unrated item's 0.0
+    score is ambiguous; "nobody has voted" is not, so this is the setting that
+    hides the obscure and the unreleased.
+    """
+    set_setting("filter_rating", "0")
+    set_setting("filter_votes", "100")
+
+    assert is_below_votes({"id": 1})
+    assert is_below_votes({"id": 1, "vote_count": None})
+
+
+def test_a_malformed_vote_count_is_kept_rather_than_raising():
+    set_setting("filter_votes", "100")
+
+    assert not is_below_votes({"id": 1, "vote_count": "lots"})
+
+
+def test_the_two_thresholds_are_independent():
+    """Either one hides an item on its own, and neither is required."""
+    set_setting("filter_rating", "7")
+    set_setting("filter_votes", "1000")
+
+    assert not below_thresholds(rated(8.0, votes=2000))
+    assert below_thresholds(rated(6.0, votes=2000))
+    assert below_thresholds(rated(8.0, votes=10))
+    assert below_thresholds(rated(6.0, votes=10))
+
+
+def test_votes_threshold_reaches_the_credit_lists():
+    set_setting("filter_movies", "false")
+    set_setting("filter_documentaries", "false")
+    set_setting("filter_posthumous", "false")
+    set_setting("filter_rating", "0")
+    set_setting("filter_votes", "200")
+
+    popular = dict(credit("Ethan Hunt"), vote_average=6.0, vote_count=900)
+    obscure = dict(credit("Ethan Hunt"), vote_average=9.5, vote_count=4)
+
+    assert not skip_credit(popular)
+    assert skip_credit(obscure)

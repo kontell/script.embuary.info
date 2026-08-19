@@ -251,7 +251,7 @@ class TMDBVideos(object):
                 set_items = sort_dict(collection_data["parts"], "release_date")
 
                 for item in set_items:
-                    if is_below_rating(item):
+                    if below_thresholds(item):
                         continue
 
                     """Filter to hide in production or rumored future movies"""
@@ -289,7 +289,7 @@ class TMDBVideos(object):
                 ):
                     continue
 
-                if is_below_rating(item):
+                if below_thresholds(item):
                     continue
 
                 """ Filter to hide in production or rumored future movies
@@ -306,7 +306,7 @@ class TMDBVideos(object):
             similar = sort_dict(similar, "first_air_date", True)
 
             for item in similar:
-                if is_below_rating(item):
+                if below_thresholds(item):
                     continue
 
                 """Filter to hide in production or rumored future shows"""

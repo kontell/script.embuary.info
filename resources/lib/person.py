@@ -131,7 +131,7 @@ def skip_credit(item, deathday=None):
     if filter_movies() and is_appearance(item):
         return True
 
-    if is_below_rating(item):
+    if below_thresholds(item):
         return True
 
     return filter_posthumous() and is_posthumous(item, deathday)

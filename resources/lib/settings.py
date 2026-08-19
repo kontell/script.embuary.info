@@ -176,6 +176,11 @@ def filter_rating():
     return _number("filter_rating")
 
 
+def filter_votes():
+    """Hide items with fewer votes than this. 0 means keep everything."""
+    return _int("filter_votes")
+
+
 def similar_movies_filter():
     return _bool("similar_movies_filter")
 
