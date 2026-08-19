@@ -20,9 +20,13 @@
   revives above 2.1.0 the official repo reclaims the add-on, which is the right
   failsafe rather than a problem to engineer around.
 
-  The display name says (Kontell) so nobody files our bugs against sualfred.
+  The display name is plain "Embuary Info". It carried a "(Kontell)" suffix so
+  nobody would file our bugs against sualfred, but that job is done by the
+  summary and description below, which name the fork and where to report to;
+  the suffix only made the name awkward everywhere it is shown. provider-name
+  still says kontell, and Kodi shows that on the add-on's information page.
 -->
-<addon id="script.embuary.info" name="Embuary Info (Kontell)" version="2.2.0" provider-name="kontell">
+<addon id="script.embuary.info" name="Embuary Info" version="2.2.0" provider-name="kontell">
     <!--
       script.module.requests is gone: nothing imports it any more. Its 825 ms
       import was the largest single cost in opening a page, and what it was
