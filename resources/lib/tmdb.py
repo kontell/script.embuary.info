@@ -324,6 +324,74 @@ def tmdb_calc_age(birthday, deathday=None):
     return age
 
 
+def is_below_rating(item):
+    """Whether TheMovieDB rates this item below the threshold the user set.
+
+    Lives here rather than in person.py because every list asks it: person
+    credits, similar titles and collection members all carry the same two
+    fields.
+
+    Something nobody has voted on is kept. TMDb reports an unrated item as
+    vote_average 0.0, which is indistinguishable from a genuinely terrible
+    score unless vote_count is read too -- and hiding everything unreleased the
+    moment the slider leaves zero is not what "hide items rated below" means.
+    The same reasoning as an unknown date in is_posthumous: no evidence is not
+    evidence.
+    """
+    minimum = filter_rating()
+
+    if minimum <= 0:
+        return False
+
+    if not (item.get("vote_count") or 0):
+        return False
+
+    rating = item.get("vote_average")
+
+    """ A missing or unreadable score is not a low one. `or 0` here would turn
+        None into 0.0 and hide the item, which is the same mistake as treating
+        an unrated title as terrible.
+    """
+    if rating is None:
+        return False
+
+    try:
+        return float(rating) < minimum
+
+    except (TypeError, ValueError):
+        return False
+
+
+def is_below_votes(item):
+    """Whether the item has fewer TheMovieDB votes than the threshold.
+
+    A missing vote_count counts as zero and is hidden, which is the opposite of
+    how is_below_rating treats a missing score -- and deliberately so. An unrated
+    item's 0.0 is ambiguous, but "nobody has voted" is not: no votes really is
+    fewer than any threshold above zero. This is the setting that hides the
+    obscure and the unreleased, and the rating one is not.
+    """
+    minimum = filter_votes()
+
+    if minimum <= 0:
+        return False
+
+    try:
+        return int(item.get("vote_count") or 0) < minimum
+
+    except (TypeError, ValueError):
+        return False
+
+
+def below_thresholds(item):
+    """Whether either popularity threshold hides this item.
+
+    One call so the four lists that filter cannot drift apart on which of the
+    two they remembered to ask about.
+    """
+    return is_below_rating(item) or is_below_votes(item)
+
+
 def tmdb_error(message=ADDON.getLocalizedString(32019)):
     busydialog(close=True)
     DIALOG.ok(ADDON.getLocalizedString(32000), str(message))

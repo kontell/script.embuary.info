@@ -147,6 +147,26 @@
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="filter_rating" type="number" label="32094" help="32095">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<minimum>0</minimum>
+						<step>0.1</step>
+						<maximum>10</maximum>
+					</constraints>
+					<control type="slider" format="number"/>
+				</setting>
+				<setting id="filter_votes" type="integer" label="32096" help="32097">
+					<level>0</level>
+					<default>0</default>
+					<constraints>
+						<minimum>0</minimum>
+						<step>100</step>
+						<maximum>5000</maximum>
+					</constraints>
+					<control type="slider" format="integer"/>
+				</setting>
 				<setting id="filter_daydelta" type="integer" label="32045" help="32082">
 					<level>0</level>
 					<default>180</default>

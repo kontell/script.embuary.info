@@ -127,6 +127,12 @@ class _FakeAddon:
         except ValueError:
             return 0
 
+    def getSettingNumber(self, key):
+        try:
+            return float(_SETTINGS.get(key, "0"))
+        except ValueError:
+            return 0.0
+
     def getLocalizedString(self, code):
         return "string-%s" % code
 

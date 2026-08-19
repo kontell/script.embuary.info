@@ -40,11 +40,23 @@ SELF_CREDIT = re.compile(
     r"\b("
     r"self|selves|himself|herself|themself|themselves|"
     r"narrator|narration|host|hostess|presenter|"
-    r"interviewer|interviewee|commentator|moderator|"
-    r"archive footage|archival footage"
+    r"interviewer|interviewee|commentator|moderator"
     r")\b(?!['’]s)",
     re.IGNORECASE,
 )
+
+""" Archive footage is the one signal that does not need the documentary gate.
+
+    A film cut around old footage of someone is not a part they played, whatever
+    genre it carries, and TMDb says so in the character: `Fred Astaire (archive
+    footage)`, `Self - archive footage`, `(archival footage)`. The rest of the
+    words above genuinely do need the gate, because `Narrator` and `Host` are
+    ordinary roles outside a documentary.
+
+    The help text for this setting has always promised archive footage. Until
+    now only documentaries delivered it.
+"""
+ARCHIVE_FOOTAGE = re.compile(r"\barchiv(?:e|al)\s+footage\b", re.IGNORECASE)
 
 ########################
 
@@ -57,19 +69,25 @@ def is_documentary(item):
 def is_appearance(item):
     """Whether a credit is an appearance rather than a part the person played.
 
-    Only documentaries are judged. Outside genre 99 a character called `Host`
-    or `Narrator` is a role like any other, and filtering on the word alone
-    would quietly eat real credits.
+    Archive footage counts wherever it appears: a film built around old footage
+    of someone is not a part they played, whatever genre it carries.
+
+    Everything else is judged only inside a documentary. Outside genre 99 a
+    character called `Host` or `Narrator` is a role like any other, and
+    filtering on the word alone would quietly eat real credits.
 
     A documentary credit with no character at all counts as an appearance.
     That is the case upstream could not reach at all: it read the character
     only when there was one, and TMDb leaves it blank for most talking-head
     credits.
     """
+    character = (item.get("character") or "").strip()
+
+    if ARCHIVE_FOOTAGE.search(character):
+        return True
+
     if not is_documentary(item):
         return False
-
-    character = (item.get("character") or "").strip()
 
     if not character:
         return True
@@ -111,6 +129,9 @@ def skip_credit(item, deathday=None):
         return True
 
     if filter_movies() and is_appearance(item):
+        return True
+
+    if below_thresholds(item):
         return True
 
     return filter_posthumous() and is_posthumous(item, deathday)

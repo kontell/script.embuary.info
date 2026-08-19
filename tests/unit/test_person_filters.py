@@ -15,6 +15,8 @@ import pytest
 
 from conftest import set_setting
 
+from resources.lib.tmdb import below_thresholds, is_below_rating, is_below_votes
+
 from resources.lib.person import (
     GENRE_DOCUMENTARY,
     is_appearance,
@@ -40,7 +42,10 @@ def credit(character=None, genres=(DRAMA,)):
 """ is_appearance
 """
 
-APPEARANCES = [
+""" Words that only mean "appearance" inside a documentary. `Narrator` and
+    `Host` are ordinary parts in anything else.
+"""
+DOCUMENTARY_ONLY = [
     "Self",
     "self",
     "SELF",
@@ -51,8 +56,6 @@ APPEARANCES = [
     "Self - Host",
     "Himself - Narrator",
     "Herself - Interviewee",
-    "Self (archive footage)",
-    "Self (archival footage)",
     "Narrator",
     "Presenter",
     "Commentator",
@@ -62,10 +65,35 @@ APPEARANCES = [
     "Various Self",
 ]
 
+""" Archive footage means the same thing in any genre: old footage of someone,
+    not a part they played.
+"""
+ARCHIVE_FOOTAGE_CREDITS = [
+    "Self (archive footage)",
+    "Self (archival footage)",
+    "Himself - archive footage",
+    "Fred Astaire (Archive Footage)",
+    "(archive footage)",
+]
+
+APPEARANCES = DOCUMENTARY_ONLY + ARCHIVE_FOOTAGE_CREDITS
+
 
 @pytest.mark.parametrize("character", APPEARANCES)
 def test_documentary_appearances_are_recognised(character):
     assert is_appearance(credit(character, genres=(GENRE_DOCUMENTARY,)))
+
+
+@pytest.mark.parametrize("character", ARCHIVE_FOOTAGE_CREDITS)
+def test_archive_footage_is_an_appearance_in_any_genre(character):
+    """The one signal that does not need the documentary gate.
+
+    A drama cut around old footage of an actor is not a part they played, and
+    the setting's help text has always said archive footage was covered. Until
+    now only documentaries delivered it.
+    """
+    assert is_appearance(credit(character, genres=(DRAMA, COMEDY)))
+    assert is_appearance(credit(character, genres=()))
 
 
 def test_documentary_with_no_character_is_an_appearance():
@@ -101,12 +129,20 @@ def test_real_roles_in_documentaries_are_kept(character):
     assert not is_appearance(credit(character, genres=(GENRE_DOCUMENTARY,)))
 
 
-@pytest.mark.parametrize("character", APPEARANCES + ["", None])
-def test_nothing_outside_a_documentary_is_an_appearance(character):
+@pytest.mark.parametrize("character", DOCUMENTARY_ONLY + ["", None])
+def test_these_words_outside_a_documentary_are_not_appearances(character):
     """`Narrator` and `Host` are ordinary parts in a film that is not a
     documentary, and a blank character is just missing data.
     """
     assert not is_appearance(credit(character, genres=(DRAMA, COMEDY)))
+
+
+@pytest.mark.parametrize(
+    "character", ["Archie Footage", "The Footage", "archive footageless"]
+)
+def test_archive_footage_needs_both_words(character):
+    """Guards the pattern against matching either word on its own."""
+    assert not is_appearance(credit(character, genres=(DRAMA,)))
 
 
 def test_missing_genres_is_not_a_documentary():
@@ -239,3 +275,128 @@ def test_posthumous_filter_is_opt_in():
 def test_posthumous_filter_ignores_the_living():
     set_setting("filter_posthumous", "true")
     assert not skip_credit({"release_date": "2026-06-10"}, "")
+
+
+########################
+""" is_below_rating
+"""
+
+
+def rated(average, votes=100):
+    return {"id": 1, "vote_average": average, "vote_count": votes}
+
+
+def test_zero_keeps_everything():
+    """The default. A slider at zero must not filter at all, including the
+    unrated items whose vote_average TMDb reports as 0.0.
+    """
+    set_setting("filter_rating", "0")
+
+    assert not is_below_rating(rated(0.0, votes=0))
+    assert not is_below_rating(rated(1.2))
+    assert not is_below_rating(rated(9.9))
+
+
+def test_hides_only_what_is_rated_below_the_threshold():
+    set_setting("filter_rating", "6.5")
+
+    assert is_below_rating(rated(6.4))
+    assert is_below_rating(rated(0.1))
+    assert not is_below_rating(rated(6.5))
+    assert not is_below_rating(rated(6.6))
+
+
+def test_something_nobody_has_voted_on_is_kept():
+    """TMDb reports an unrated item as vote_average 0.0, which is
+    indistinguishable from a terrible score unless vote_count is read. Hiding
+    everything unreleased the moment the slider moves is not what the setting
+    says it does.
+    """
+    set_setting("filter_rating", "7")
+
+    assert not is_below_rating(rated(0.0, votes=0))
+    assert not is_below_rating({"id": 1})
+
+
+def test_a_malformed_rating_is_kept_rather_than_raising():
+    set_setting("filter_rating", "5")
+
+    assert not is_below_rating({"id": 1, "vote_average": None, "vote_count": 10})
+    assert not is_below_rating({"id": 1, "vote_average": "n/a", "vote_count": 10})
+
+
+def test_the_rating_filter_composes_with_the_others():
+    set_setting("filter_movies", "false")
+    set_setting("filter_documentaries", "false")
+    set_setting("filter_posthumous", "false")
+    set_setting("filter_rating", "7")
+
+    good = dict(credit("Ethan Hunt"), vote_average=8.1, vote_count=500)
+    bad = dict(credit("Ethan Hunt"), vote_average=3.2, vote_count=500)
+
+    assert not skip_credit(good)
+    assert skip_credit(bad)
+
+
+########################
+""" is_below_votes
+"""
+
+
+def test_zero_votes_threshold_keeps_everything():
+    set_setting("filter_votes", "0")
+
+    assert not is_below_votes(rated(8.0, votes=0))
+    assert not is_below_votes(rated(8.0, votes=3))
+
+
+def test_hides_anything_with_fewer_votes():
+    set_setting("filter_votes", "500")
+
+    assert is_below_votes(rated(9.9, votes=499))
+    assert is_below_votes(rated(9.9, votes=0))
+    assert not is_below_votes(rated(1.0, votes=500))
+    assert not is_below_votes(rated(1.0, votes=5000))
+
+
+def test_no_votes_at_all_is_below_any_threshold():
+    """The deliberate difference from the rating filter. An unrated item's 0.0
+    score is ambiguous; "nobody has voted" is not, so this is the setting that
+    hides the obscure and the unreleased.
+    """
+    set_setting("filter_rating", "0")
+    set_setting("filter_votes", "100")
+
+    assert is_below_votes({"id": 1})
+    assert is_below_votes({"id": 1, "vote_count": None})
+
+
+def test_a_malformed_vote_count_is_kept_rather_than_raising():
+    set_setting("filter_votes", "100")
+
+    assert not is_below_votes({"id": 1, "vote_count": "lots"})
+
+
+def test_the_two_thresholds_are_independent():
+    """Either one hides an item on its own, and neither is required."""
+    set_setting("filter_rating", "7")
+    set_setting("filter_votes", "1000")
+
+    assert not below_thresholds(rated(8.0, votes=2000))
+    assert below_thresholds(rated(6.0, votes=2000))
+    assert below_thresholds(rated(8.0, votes=10))
+    assert below_thresholds(rated(6.0, votes=10))
+
+
+def test_votes_threshold_reaches_the_credit_lists():
+    set_setting("filter_movies", "false")
+    set_setting("filter_documentaries", "false")
+    set_setting("filter_posthumous", "false")
+    set_setting("filter_rating", "0")
+    set_setting("filter_votes", "200")
+
+    popular = dict(credit("Ethan Hunt"), vote_average=6.0, vote_count=900)
+    obscure = dict(credit("Ethan Hunt"), vote_average=9.5, vote_count=4)
+
+    assert not skip_credit(popular)
+    assert skip_credit(obscure)
