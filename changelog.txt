@@ -1,3 +1,11 @@
+v2.3.0
+- The add-on is called "Embuary Info" again rather than "Embuary Info (Kontell)". It is still this fork, and the summary and description still say so; the suffix only made the name awkward everywhere Kodi shows it.
+- Person credits: archive footage is recognised in any genre. A film cut around old footage of an actor is not a part they played, and until now only documentaries were checked, although this setting's help text has always promised archive footage.
+- New setting to hide items TheMovieDB rates below a chosen score, on a 0-10 slider in steps of 0.1. Something nobody has voted on is kept, because an unrated item's zero is not the same as a bad score.
+- New setting to hide items with fewer TheMovieDB votes than a chosen number, on a 0-5000 slider in steps of 100. This is the one that hides the obscure, since no votes really is fewer than any threshold. On a real list of 156 credits, 106 survive at 100 votes and 57 at 1000.
+- Both new filters apply everywhere the existing ones do: a person's credits, similar titles, and collection members.
+- Less work on every launch: the TLS machinery loads only when a request is actually made, which a page with everything already cached never does. That is 110 ms less on an Android TV box, although the time you actually wait is bounded by Kodi building the window and did not change.
+
 v2.2.0
 - Settings are now four tabs - General, Skin, API keys, Advanced - with the descriptions moved out of the labels into help text. Existing settings keep their values.
 - Person credits: appearances as themselves are recognised however TheMovieDB spells them. The old check matched only "himself" and "herself", and only when a character was filled in at all, so it caught none of Tom Hanks' 114 documentary credits and 2 of Martin Scorsese's 260. Genuine roles are kept: named voice parts in documentaries stay.
