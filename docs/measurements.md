@@ -286,3 +286,70 @@ Neither has been reproduced on the Bravia. Per the ARM section above, the fixed
 costs removed here are CPU-bound and should scale with the 8-20x gap measured on
 this add-on's workload, while the network half will not — so the cold split on a
 TV box should tilt further toward the network than it does here.
+
+## On the Bravia at last
+
+Everything above was measured on a desktop, with a standing note that none of it
+had been reproduced on the ARM box the add-on exists for. This section is that
+box: a Sony BRAVIA 4K AE2, Android 14, Kodi 22.0 beta, 1772 movies and 82 shows
+in the library — the same order as the desktop's 1775.
+
+Driven over ADB. Builtins have to originate on the device: Kodi's EventServer
+there binds `udp6` only, so a `RunScript` sent from a v4 LAN is discarded with
+no error anywhere. `Addons.ExecuteAddon` is not a substitute — it resolves to
+the add-on's **first** `<extension>`, which is the plugin, so it ran `plugin.py`
+and dispatched to the root listing instead of opening the dialog.
+
+### Where a page open actually goes
+
+Warm — TheMovieDB responses already cached — opening a movie page, timed from
+firing the launch to the window reporting itself visible. Stage marks are inside
+the process.
+
+| stage | cumulative | this stage |
+|---|---|---|
+| imports done | 221 ms | 221 ms |
+| find_id done | 235 ms | 14 ms |
+| local_db read and parsed | 290 ms | **55 ms** |
+| shows indexed (82 rows) | 291 ms | 1 ms |
+| movies indexed (1772 rows) | 334 ms | **43 ms** |
+| page data fetched | 453 ms | 119 ms |
+| onInit reached | 559 ms | 106 ms |
+| listitems added | 602 ms | 43 ms |
+| **window visible** | **~1079 ms** | **~477 ms** |
+
+**The single largest cost is not Python.** Nearly half the wait is Kodi standing
+up the window after the add-on has finished. Three separate signals — window
+visibility, the details container, the cast container — all flip at the same
+instant, so this is not the 400 ms `WindowOpen` fade being waited on; it is
+window construction.
+
+### The desktop is a better proxy than the docs above assume
+
+1079 ms here against roughly 600 ms on the desktop is **1.8x**, not the 8–20x
+the library-scan section measured. That gap was for a Python-bound workload, and
+after the import and matching work there is not much Python left in this path.
+
+### Two things that turned out not to be worth doing
+
+**Image count does not drive page-open time.** Dune builds 358 image ListItems
+to Fight Club's 143 and opens in the same time: 1093 ms against 1183 ms, warm,
+which is inside the noise. The plan for this work carried "build image-grid
+ListItems lazily" as a candidate on the strength of 358 of ~490 ListItems being
+images. On this hardware it would buy nothing.
+
+**A 110 ms Python saving did not move the wall clock.** Deferring `ssl` cut the
+import phase from 221 ms to 110 ms, measured in-process, and the time to a
+visible window did not change: 1079 ms before, 1122 ms after, distributions
+overlapping. Both paths are bounded by something else.
+
+### And one measurement that lied, again
+
+The first A/B of that change on the plugin listing path read 1403–1577 ms
+without it against 624–823 ms with — a clean 2x, and wrong. Re-run alternating,
+both arms sit at 583–823 ms. The first arm had been warmed by earlier activity
+and the second was measured cold straight after an add-on bounce.
+
+That is the second time in this file a large, plausible, one-directional result
+came from an A/B that was not alternating. **Alternate the arms, or do not
+report the number.**
