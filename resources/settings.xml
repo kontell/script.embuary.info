@@ -162,8 +162,8 @@
 					<default>0</default>
 					<constraints>
 						<minimum>0</minimum>
-						<step>100</step>
-						<maximum>5000</maximum>
+						<step>10</step>
+						<maximum>1000</maximum>
 					</constraints>
 					<control type="slider" format="integer"/>
 				</setting>
