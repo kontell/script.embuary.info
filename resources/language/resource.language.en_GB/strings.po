@@ -487,3 +487,13 @@ msgstr ""
 msgctxt "#32093"
 msgid "Hides credits released after the person died. A credit with no release date is kept, since an unknown date is not evidence either way."
 msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32094"
+msgid "Hide items rated below"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32095"
+msgid "Hides films and shows TheMovieDB rates below this. Zero keeps everything. Something nobody has voted on yet has no rating rather than a bad one, so it is kept."
+msgstr ""

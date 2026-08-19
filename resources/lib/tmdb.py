@@ -324,6 +324,44 @@ def tmdb_calc_age(birthday, deathday=None):
     return age
 
 
+def is_below_rating(item):
+    """Whether TheMovieDB rates this item below the threshold the user set.
+
+    Lives here rather than in person.py because every list asks it: person
+    credits, similar titles and collection members all carry the same two
+    fields.
+
+    Something nobody has voted on is kept. TMDb reports an unrated item as
+    vote_average 0.0, which is indistinguishable from a genuinely terrible
+    score unless vote_count is read too -- and hiding everything unreleased the
+    moment the slider leaves zero is not what "hide items rated below" means.
+    The same reasoning as an unknown date in is_posthumous: no evidence is not
+    evidence.
+    """
+    minimum = filter_rating()
+
+    if minimum <= 0:
+        return False
+
+    if not (item.get("vote_count") or 0):
+        return False
+
+    rating = item.get("vote_average")
+
+    """ A missing or unreadable score is not a low one. `or 0` here would turn
+        None into 0.0 and hide the item, which is the same mistake as treating
+        an unrated title as terrible.
+    """
+    if rating is None:
+        return False
+
+    try:
+        return float(rating) < minimum
+
+    except (TypeError, ValueError):
+        return False
+
+
 def tmdb_error(message=ADDON.getLocalizedString(32019)):
     busydialog(close=True)
     DIALOG.ok(ADDON.getLocalizedString(32000), str(message))

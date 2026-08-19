@@ -107,6 +107,10 @@ def _int(key, fallback=0):
     return _read("getSettingInt", key, fallback)
 
 
+def _number(key, fallback=0.0):
+    return _read("getSettingNumber", key, fallback)
+
+
 ########################
 """ TheMovieDB
 """
@@ -165,6 +169,11 @@ def filter_documentaries():
 def filter_posthumous():
     """Hide credits released after the person died."""
     return _bool("filter_posthumous")
+
+
+def filter_rating():
+    """Hide items rated below this. 0 means keep everything."""
+    return _number("filter_rating")
 
 
 def similar_movies_filter():

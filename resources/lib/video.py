@@ -251,6 +251,9 @@ class TMDBVideos(object):
                 set_items = sort_dict(collection_data["parts"], "release_date")
 
                 for item in set_items:
+                    if is_below_rating(item):
+                        continue
+
                     """Filter to hide in production or rumored future movies"""
                     if filter_upcoming():
                         diff = date_delta(item.get("release_date", "2900-01-01"))
@@ -286,6 +289,9 @@ class TMDBVideos(object):
                 ):
                     continue
 
+                if is_below_rating(item):
+                    continue
+
                 """ Filter to hide in production or rumored future movies
                 """
                 if filter_upcoming():
@@ -300,6 +306,9 @@ class TMDBVideos(object):
             similar = sort_dict(similar, "first_air_date", True)
 
             for item in similar:
+                if is_below_rating(item):
+                    continue
+
                 """Filter to hide in production or rumored future shows"""
                 if filter_upcoming():
                     diff = date_delta(item.get("first_air_date", "2900-01-01"))
