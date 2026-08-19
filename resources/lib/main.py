@@ -181,9 +181,26 @@ class TheMovieDB(object):
 
         try:
             if len(result) > 1:
-                position = tmdb_select_dialog(result, self.call)
-                if position < 0:
-                    raise Exception
+                """TMDb's person search is fuzzy and its database is full of
+                near-duplicate stubs, so a plain cast name returns more than
+                one result about a third of the time -- and the extras are
+                almost always noise nobody would pick. Skip the dialog when
+                the intended person is obvious; see unambiguous_person.
+
+                Only for people. Two films really can share a title, and
+                there the dialog is doing useful work.
+                """
+                chosen = None
+
+                if self.call == "person" and skip_person_dialog():
+                    chosen = unambiguous_person(result, self.query)
+
+                if chosen is not None:
+                    position = result.index(chosen)
+                else:
+                    position = tmdb_select_dialog(result, self.call)
+                    if position < 0:
+                        raise Exception
             else:
                 position = 0
 

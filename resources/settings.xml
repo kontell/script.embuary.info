@@ -137,6 +137,11 @@
 				</setting>
 			</group>
 			<group id="3" label="32065">
+				<setting id="skip_person_dialog" type="boolean" label="32098" help="32099">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
 				<setting id="similar_movies_filter" type="boolean" label="32041" help="32080">
 					<level>0</level>
 					<default>false</default>

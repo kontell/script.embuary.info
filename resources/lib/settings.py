@@ -181,6 +181,11 @@ def filter_votes():
     return _int("filter_votes")
 
 
+def skip_person_dialog():
+    """Skip the "choose a person" dialog when the match is obvious."""
+    return _bool("skip_person_dialog")
+
+
 def similar_movies_filter():
     return _bool("similar_movies_filter")
 
