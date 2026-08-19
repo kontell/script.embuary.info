@@ -507,3 +507,13 @@ msgstr ""
 msgctxt "#32097"
 msgid "Hides films and shows with fewer TheMovieDB votes than this. Zero keeps everything. Unlike the rating above, something nobody has voted on really does have no votes, so this is what hides the obscure and the unreleased."
 msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32098"
+msgid "Skip the person chooser when the match is obvious"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32099"
+msgid "TheMovieDB holds near-duplicate entries for most well-known people, so opening an actor asks you to choose between the real one and a stub about a third of the time. With this on, the chooser only appears when the answer is genuinely unclear: a result has to match the name exactly, and where TheMovieDB holds two people of the same name, one has to be far better known."
+msgstr ""

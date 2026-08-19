@@ -148,6 +148,26 @@ class TheMovieDB(object):
                 else:
                     self.query = query_values[position]
 
+            """ A name only has to be resolved once.
+
+                Kodi stores no external id for a person -- its actor table is
+                (actor_id, name, art_urls) and its uniqueid table holds nothing
+                but movies, shows and episodes -- so every visit to an actor
+                starts from a bare name and pays a TMDb search to turn it back
+                into an id. Remembering the answer skips that round trip, and
+                means the genuinely ambiguous names left over after
+                unambiguous_person are asked about once rather than every time.
+
+                Person only. A film search is qualified by year and two films
+                really can share a title, so there the dialog is doing useful
+                work and a cached answer would suppress it wrongly.
+            """
+            if self.call == "person":
+                cached_id = get_cache(person_id_cache_key(self.query))
+
+                if cached_id:
+                    return cached_id
+
             result = tmdb_search(self.call, self.query, self.query_year)
 
             if self.exact_search:
@@ -181,9 +201,26 @@ class TheMovieDB(object):
 
         try:
             if len(result) > 1:
-                position = tmdb_select_dialog(result, self.call)
-                if position < 0:
-                    raise Exception
+                """TMDb's person search is fuzzy and its database is full of
+                near-duplicate stubs, so a plain cast name returns more than
+                one result about a third of the time -- and the extras are
+                almost always noise nobody would pick. Skip the dialog when
+                the intended person is obvious; see unambiguous_person.
+
+                Only for people. Two films really can share a title, and
+                there the dialog is doing useful work.
+                """
+                chosen = None
+
+                if self.call == "person" and skip_person_dialog():
+                    chosen = unambiguous_person(result, self.query)
+
+                if chosen is not None:
+                    position = result.index(chosen)
+                else:
+                    position = tmdb_select_dialog(result, self.call)
+                    if position < 0:
+                        raise Exception
             else:
                 position = 0
 
@@ -191,6 +228,15 @@ class TheMovieDB(object):
 
         except Exception:
             return ""
+
+        """ Remember it, however it was decided. Caching the user's own choice
+            is the point rather than a side effect: it is what stops the two or
+            three names a real library cannot resolve automatically from asking
+            again on every visit. The cost is that a misclick sticks until the
+            entry expires or caching is turned off.
+        """
+        if method == "query" and self.call == "person" and self.query:
+            write_cache(person_id_cache_key(self.query), tmdb_id)
 
         return tmdb_id
 
