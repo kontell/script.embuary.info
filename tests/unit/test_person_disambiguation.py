@@ -12,7 +12,13 @@ himself obscure.
 
 import pytest
 
-from resources.lib.tmdb import POPULARITY_DOMINANCE, unambiguous_person
+from conftest import set_setting
+
+from resources.lib.tmdb import (
+    POPULARITY_DOMINANCE,
+    person_id_cache_key,
+    unambiguous_person,
+)
 
 
 def person(name, popularity):
@@ -146,3 +152,102 @@ def test_a_single_result_is_never_this_functions_problem():
     the rule should still answer sensibly if handed one.
     """
     assert unambiguous_person([person("Clive Owen", 4.25)], "Clive Owen") is not None
+
+
+########################
+""" Remembering a resolved name
+
+    Kodi stores no external id for a person, so every visit to an actor starts
+    from a bare name. The key is what lets the answer be reused.
+"""
+
+
+def test_the_key_normalises_the_same_way_the_matching_does():
+    """Otherwise `Clive Owen` and `clive  owen` each pay for their own search
+    and each get asked separately.
+    """
+    assert person_id_cache_key("Clive Owen") == person_id_cache_key("  clive   OWEN ")
+
+
+def test_different_people_get_different_keys():
+    assert person_id_cache_key("Clive Owen") != person_id_cache_key("Clive Owens")
+
+
+def test_the_key_is_namespaced():
+    """It shares simplecache with the page and image entries."""
+    assert person_id_cache_key("Clive Owen").startswith("person_id_")
+
+
+def test_an_empty_name_still_produces_a_usable_key():
+    """find_id guards on self.query before writing, but the key itself must not
+    raise on the shapes that reach it.
+    """
+    assert person_id_cache_key("") == "person_id_"
+    assert person_id_cache_key(None) == "person_id_"
+
+
+def test_a_resolved_name_is_never_searched_again(monkeypatch):
+    """The whole point of the cache: one TMDb search per person, ever.
+
+    Exercises find_id rather than the key helper, because what matters is that
+    the second call does not reach tmdb_search at all -- that is both the round
+    trip saved and the reason an ambiguous name stops asking after the first
+    answer.
+    """
+    from resources.lib import helper, main as main_module
+
+    set_setting("cache_enabled", "true")
+    set_setting("skip_person_dialog", "true")
+    helper.CACHE._store.clear()
+
+    searched = []
+
+    def fake_search(call, query, year=None):
+        searched.append(query)
+        return [
+            {"id": 4242, "name": "Rebecca Vantage", "popularity": 4.25},
+            {"id": 9, "name": "Rebecca Vantage", "popularity": 0.24},
+        ]
+
+    monkeypatch.setattr(main_module, "tmdb_search", fake_search)
+
+    def lookup():
+        script = main_module.TheMovieDB.__new__(main_module.TheMovieDB)
+        script.call = "person"
+        script.query = "Rebecca Vantage"
+        script.query_year = ""
+        script.exact_search = False
+        return script.find_id(method="query")
+
+    assert lookup() == 4242
+    assert lookup() == 4242
+    assert lookup() == 4242
+    assert searched == ["Rebecca Vantage"]
+
+
+def test_a_film_search_is_not_cached_by_title(monkeypatch):
+    """Two films really can share a title, so a cached answer there would
+    suppress a dialog that is doing useful work.
+    """
+    from resources.lib import helper, main as main_module
+
+    set_setting("cache_enabled", "true")
+    helper.CACHE._store.clear()
+
+    searched = []
+
+    def fake_search(call, query, year=None):
+        searched.append(query)
+        return [{"id": 7, "name": "The Thing", "title": "The Thing"}]
+
+    monkeypatch.setattr(main_module, "tmdb_search", fake_search)
+
+    for _ in range(2):
+        script = main_module.TheMovieDB.__new__(main_module.TheMovieDB)
+        script.call = "movie"
+        script.query = "The Thing"
+        script.query_year = ""
+        script.exact_search = False
+        assert script.find_id(method="query") == 7
+
+    assert searched == ["The Thing", "The Thing"]

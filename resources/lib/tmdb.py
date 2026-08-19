@@ -244,6 +244,15 @@ def _normalise_name(value):
     return " ".join(str(value or "").split()).casefold()
 
 
+def person_id_cache_key(query):
+    """Cache key for a name that has already been resolved to a TMDb id.
+
+    Normalised the same way the matching is, so `Clive Owen` and `clive  owen`
+    share one entry rather than each paying for their own search.
+    """
+    return "person_id_" + _normalise_name(query)
+
+
 def unambiguous_person(results, query):
     """The result a person search obviously meant, or None to go on asking.
 
