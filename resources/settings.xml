@@ -155,6 +155,13 @@
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="clear_person_cache" type="action" label="32105" help="32106">
+					<level>0</level>
+					<data>RunScript(script.embuary.info,call=clear_person_cache)</data>
+					<control type="button" format="action">
+						<close>false</close>
+					</control>
+				</setting>
 			</group>
 		</category>
 		<category id="filters" label="32100" help="32101">

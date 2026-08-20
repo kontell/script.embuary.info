@@ -503,6 +503,21 @@ msgid "Trakt.tv API key"
 msgstr ""
 
 #: /resources/settings.xml
+msgctxt "#32105"
+msgid "Forget remembered actors"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32106"
+msgid "Opening an actor remembers which TheMovieDB person the name resolved to, so the same name is never searched for or asked about twice. Forget them if a name was matched to the wrong person."
+msgstr ""
+
+#: /default.py
+msgctxt "#32107"
+msgid "Forgot %i remembered actors"
+msgstr ""
+
+#: /resources/settings.xml
 msgctxt "#32108"
 msgid "Home screen button for the films now in cinemas."
 msgstr ""

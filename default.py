@@ -28,6 +28,18 @@ class Main:
         elif self.call == "refresh_library_cache":
             get_local_media(force=True)
 
+        elif self.call == "clear_person_cache":
+            """The settings button. It runs the script rather than doing the
+            work in the settings dialog because a settings action can only
+            fire a builtin, and none of them can reach a cache.
+            """
+            forgotten = forget_cache(PERSON_ID_KEY)
+            DIALOG.notification(
+                ADDON.getAddonInfo("name"),
+                ADDON.getLocalizedString(32107) % forgotten,
+                xbmcgui.NOTIFICATION_INFO,
+            )
+
         else:
             """It takes a couple of milliseconds until the script starts (Kodi<->Python delay). This could cause double calls
             for users with a nervous "DO IT NOW!!!11!"-finger. This is a ugly but working workaround. Will be replaced with

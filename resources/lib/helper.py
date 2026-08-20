@@ -101,6 +101,75 @@ def write_cache(key, data, cache_time=336):
         )
 
 
+def forget_cache(fragment):
+    """Drop every cached entry of ours whose key contains `fragment`.
+
+    simplecache has no delete of any kind: an entry lives until it expires or
+    until the four-hourly cleanup happens to collect it. So this goes at its
+    table directly, the way its own cleanup does.
+
+    Only our own rows are reachable. Every key we write begins with
+    cache_prefix(), which begins with this add-on's id, and the database is
+    shared with every other add-on that uses simplecache. The id is matched
+    first for that reason, and the version and locale parts of the prefix are
+    deliberately not, so a key written before an update or in another language
+    is forgotten too.
+
+    Matching is done in Python rather than in SQL because LIKE reads `_` as a
+    single-character wildcard, and the keys are full of them.
+
+    Returns how many entries went, which is the only feedback the user gets.
+    """
+    import sqlite3
+    import xbmcaddon
+    import xbmcvfs
+
+    try:
+        profile = xbmcaddon.Addon("script.module.simplecache").getAddonInfo("profile")
+        dbfile = xbmcvfs.translatePath("%s/simplecache.db" % profile)
+
+        """ Checked rather than left to sqlite3, which would helpfully create
+            an empty database at that path and leave it there.
+        """
+        if not os.path.exists(dbfile):
+            return 0
+
+        connection = sqlite3.connect(dbfile, timeout=30, isolation_level=None)
+
+    except Exception as error:
+        log("could not open the cache to forget %s: %s" % (fragment, error), ERROR)
+        return 0
+
+    home = xbmcgui.Window(10000)
+
+    try:
+        doomed = [
+            row[0]
+            for row in connection.execute("SELECT id FROM simplecache")
+            if row[0].startswith(ADDON_ID) and fragment in row[0]
+        ]
+
+        for key in doomed:
+            connection.execute("DELETE FROM simplecache WHERE id = ?", (key,))
+            """ The memory cache is a window property named after the key.
+                Nothing writes one today -- CACHE.enable_mem_cache is off --
+                but a stale property would outlive the row and be served in
+                its place, so it goes as well.
+            """
+            home.clearProperty(key)
+
+    except Exception as error:
+        log("could not forget %s: %s" % (fragment, error), ERROR)
+        return 0
+
+    finally:
+        connection.close()
+
+    log("forgot %d cached entries matching %s" % (len(doomed), fragment), force=True)
+
+    return len(doomed)
+
+
 def format_currency(integer):
     try:
         integer = int(integer)
