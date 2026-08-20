@@ -1,24 +1,31 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <!--
-  Settings schema, format version 1.
+	Settings schema, format version 1.
 
-  Every id here is the id the old flat schema used. That is the whole
-  migration story: Kodi keys stored values by id in
-  addon_data/script.embuary.info/settings.xml, so an id that survives keeps
-  its value and an id that is renamed silently resets the user to default.
-  Verified on Kodi 21.3 against a value file holding non-default values for
-  all eleven pre-existing settings; see docs/measurements.md.
+	Every id here is the id the old flat schema used. That is the whole
+	migration story: Kodi keys stored values by id in
+	addon_data/script.embuary.info/settings.xml, so an id that survives keeps
+	its value and an id that is renamed silently resets the user to default.
+	Verified on Kodi 21.3 against a value file holding non-default values for
+	all eleven pre-existing settings; see docs/measurements.md.
 
-  Labels that had a description crammed into them have been shortened and
-  the description moved to a help string. Where that changed the English
-  text, a NEW string id was allocated rather than editing the existing
-  msgid: 70-odd strings.po files carry translations of the current text,
-  and rewriting an msgid in place leaves every one of them silently wrong.
+	Labels that had a description crammed into them have been shortened and
+	the description moved to a help string. Where that changed the English
+	text, a NEW string id was allocated rather than editing the existing
+	msgid: 70-odd strings.po files carry translations of the current text,
+	and rewriting an msgid in place leaves every one of them silently wrong.
+
+	No group carries a label. Kodi draws a group label as a heading inside the
+	category, and with three short categories those headings were an extra
+	level of hierarchy over lists of four or five rows. Each category is one
+	flat list instead, which is also why every setting in a category now needs
+	a label that reads on its own. The three API keys were all called "API
+	key"; only the headings told them apart.
 -->
 <settings version="1">
 	<section id="script.embuary.info">
 		<category id="general" label="32060" help="32085">
-			<group id="1" label="32086">
+			<group id="1">
 				<setting id="language_code" type="string" label="32024" help="32072">
 					<level>0</level>
 					<default>en</default>
@@ -113,8 +120,45 @@
 					</constraints>
 					<control type="list" format="string"/>
 				</setting>
+				<setting id="tmdb_api_key" type="string" label="32102" help="32074">
+					<level>0</level>
+					<default>fc168650632c6597038cf7072a7c20da</default>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32102</heading>
+					</control>
+				</setting>
+				<setting id="omdb_api_key" type="string" label="32103" help="32075">
+					<level>0</level>
+					<default />
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32103</heading>
+					</control>
+				</setting>
+				<setting id="trakt_api_key" type="string" label="32104" help="32076">
+					<level>0</level>
+					<default>db17981042166c60e1642c483f5be54b12ec86e3401cd67c2514fdf6843a110f</default>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>32104</heading>
+					</control>
+				</setting>
+				<setting id="cache_enabled" type="boolean" label="32071" help="32083">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
 			</group>
-			<group id="2" label="32064">
+		</category>
+		<category id="filters" label="32100" help="32101">
+			<group id="1">
 				<setting id="filter_shows" type="boolean" label="32027" help="32077">
 					<level>0</level>
 					<default>true</default>
@@ -135,8 +179,6 @@
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
-			</group>
-			<group id="3" label="32065">
 				<setting id="skip_person_dialog" type="boolean" label="32098" help="32099">
 					<level>0</level>
 					<default>true</default>
@@ -151,6 +193,24 @@
 					<level>0</level>
 					<default>false</default>
 					<control type="toggle"/>
+				</setting>
+				<!-- Directly below the toggle it belongs to, and gone rather than
+				     greyed out when that toggle is off: a disabled slider still reads
+				     as a setting you have to understand before moving on. -->
+				<setting id="filter_daydelta" type="integer" label="32045" help="32082">
+					<level>0</level>
+					<default>180</default>
+					<constraints>
+						<minimum>0</minimum>
+						<step>30</step>
+						<maximum>360</maximum>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<condition setting="filter_upcoming" operator="is">true</condition>
+						</dependency>
+					</dependencies>
+					<control type="slider" format="integer"/>
 				</setting>
 				<setting id="filter_rating" type="number" label="32094" help="32095">
 					<level>0</level>
@@ -167,93 +227,31 @@
 					<default>0</default>
 					<constraints>
 						<minimum>0</minimum>
-						<step>10</step>
-						<maximum>1000</maximum>
+						<step>5</step>
+						<maximum>500</maximum>
 					</constraints>
-					<control type="slider" format="integer"/>
-				</setting>
-				<setting id="filter_daydelta" type="integer" label="32045" help="32082">
-					<level>0</level>
-					<default>180</default>
-					<constraints>
-						<minimum>0</minimum>
-						<step>30</step>
-						<maximum>360</maximum>
-					</constraints>
-					<dependencies>
-						<dependency type="enable">
-							<condition setting="filter_upcoming" operator="is">true</condition>
-						</dependency>
-					</dependencies>
 					<control type="slider" format="integer"/>
 				</setting>
 			</group>
 		</category>
 		<category id="skin" label="32061" help="32066">
 			<group id="1">
-				<setting id="menu_now_playing" type="boolean" label="32030">
+				<setting id="menu_now_playing" type="boolean" label="32030" help="32108">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
-				<setting id="menu_upcoming" type="boolean" label="32031">
+				<setting id="menu_upcoming" type="boolean" label="32031" help="32109">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
-				<setting id="menu_nextaired" type="boolean" label="32068">
+				<setting id="menu_nextaired" type="boolean" label="32068" help="32110">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
-				<setting id="menu_search" type="boolean" label="137">
-					<level>0</level>
-					<default>true</default>
-					<control type="toggle"/>
-				</setting>
-			</group>
-		</category>
-		<category id="apikeys" label="32062" help="32088">
-			<group id="1" label="32086">
-				<setting id="tmdb_api_key" type="string" label="32023" help="32074">
-					<level>0</level>
-					<default>fc168650632c6597038cf7072a7c20da</default>
-					<constraints>
-						<allowempty>true</allowempty>
-					</constraints>
-					<control type="edit" format="string">
-						<heading>32023</heading>
-					</control>
-				</setting>
-			</group>
-			<group id="2" label="32089">
-				<setting id="omdb_api_key" type="string" label="32023" help="32075">
-					<level>0</level>
-					<default />
-					<constraints>
-						<allowempty>true</allowempty>
-					</constraints>
-					<control type="edit" format="string">
-						<heading>32023</heading>
-					</control>
-				</setting>
-			</group>
-			<group id="3" label="32090">
-				<setting id="trakt_api_key" type="string" label="32023" help="32076">
-					<level>0</level>
-					<default>db17981042166c60e1642c483f5be54b12ec86e3401cd67c2514fdf6843a110f</default>
-					<constraints>
-						<allowempty>true</allowempty>
-					</constraints>
-					<control type="edit" format="string">
-						<heading>32023</heading>
-					</control>
-				</setting>
-			</group>
-		</category>
-		<category id="advanced" label="32063" help="32091">
-			<group id="1">
-				<setting id="cache_enabled" type="boolean" label="32071" help="32083">
+				<setting id="menu_search" type="boolean" label="137" help="32111">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>

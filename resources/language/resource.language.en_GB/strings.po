@@ -325,8 +325,12 @@ msgstr ""
 # These are new ids rather than edits to the ids above on purpose: 70-odd
 # strings.po files carry translations of the existing English text, and
 # rewriting an msgid in place would leave every one of them silently wrong.
-# Where an existing label was already short enough to keep (32003, 32023,
-# 32024, 32027, 32041, 32044, 32045, 32047) it is reused and only gains help.
+# Where an existing label was already short enough to keep (32003, 32024,
+# 32027, 32041, 32044, 32045, 32047) it is reused and only gains help.
+#
+# 32023 "API key" is no longer one of them. It labelled all three keys at
+# once, which only read because a group heading above each said which
+# service it was for; with the headings gone each key names its own service.
 
 #: /resources/settings.xml
 msgctxt "#32060"
@@ -339,28 +343,8 @@ msgid "Skin"
 msgstr ""
 
 #: /resources/settings.xml
-msgctxt "#32062"
-msgid "API keys"
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32063"
-msgid "Advanced"
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32064"
-msgid "Person credits"
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32065"
-msgid "Lists"
-msgstr ""
-
-#: /resources/settings.xml
 msgctxt "#32066"
-msgid "Buttons a skin can offer for this add-on on its home screen. Only skins that read these follow them; stock Estuary hard-codes its own and will not."
+msgid "Buttons a skin can offer for this add-on on its home screen, and the optional context menu entry. Only skins that read these settings follow them; stock Estuary hard-codes its own and will not."
 msgstr ""
 
 #: /resources/settings.xml
@@ -445,37 +429,12 @@ msgstr ""
 
 #: /resources/settings.xml
 msgctxt "#32084"
-msgid "Adds an Embuary Info entry to the context menu of your video library."
+msgid "Adds an Embuary Info entry to the context menu of your video library. Kodi has to be restarted before it appears."
 msgstr ""
 
 #: /resources/settings.xml
 msgctxt "#32085"
-msgid "Language, certification, and what gets filtered out of the lists."
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32086"
-msgid "TheMovieDB"
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32088"
-msgid "Keys for the services this add-on reads from. The bundled keys are shared by everyone who uses it."
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32089"
-msgid "OMDb"
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32090"
-msgid "Trakt.tv"
-msgstr ""
-
-#: /resources/settings.xml
-msgctxt "#32091"
-msgid "Caching, and the optional context menu add-on."
+msgid "Language, certification, the keys for the services this add-on reads from, and caching."
 msgstr ""
 
 #: /resources/settings.xml
@@ -516,4 +475,49 @@ msgstr ""
 #: /resources/settings.xml
 msgctxt "#32099"
 msgid "TheMovieDB holds near-duplicate entries for most well-known people, so opening an actor asks you to choose between the real one and a stub about a third of the time. With this on, the chooser only appears when the answer is genuinely unclear: a result has to match the name exactly, and where TheMovieDB holds two people of the same name, one has to be far better known."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32100"
+msgid "Filters"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32101"
+msgid "What gets dropped from a person's credits and from the lists on a page."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32102"
+msgid "TheMovieDB API key"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32103"
+msgid "OMDb API key"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32104"
+msgid "Trakt.tv API key"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32108"
+msgid "Home screen button for the films now in cinemas."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32109"
+msgid "Home screen button for the films released soon."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32110"
+msgid "Home screen button for the next episodes of your shows."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32111"
+msgid "Home screen button that opens the TheMovieDB search."
 msgstr ""
