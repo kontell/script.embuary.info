@@ -897,12 +897,14 @@
 								     not depend on a skin setting.
 
 								     Bottom-left because it is the one free corner: these posters already
-								     use top-left for "in your library" and top-right for "watched". The
-								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     use top-left for "in your library" and top-right for "watched". It sits
+								     further in from that corner than either of those, which reads better
+								     over poster art than tucking it flush. The include carries its own
+								     +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>34</left>
-									<top>327</top>
+									<left>40</left>
+									<top>321</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
@@ -1021,12 +1023,14 @@
 								     not depend on a skin setting.
 
 								     Bottom-left because it is the one free corner: these posters already
-								     use top-left for "in your library" and top-right for "watched". The
-								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     use top-left for "in your library" and top-right for "watched". It sits
+								     further in from that corner than either of those, which reads better
+								     over poster art than tucking it flush. The include carries its own
+								     +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>34</left>
-									<top>327</top>
+									<left>40</left>
+									<top>321</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
@@ -1161,12 +1165,14 @@
 								     not depend on a skin setting.
 
 								     Bottom-left because it is the one free corner: these posters already
-								     use top-left for "in your library" and top-right for "watched". The
-								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     use top-left for "in your library" and top-right for "watched". It sits
+								     further in from that corner than either of those, which reads better
+								     over poster art than tucking it flush. The include carries its own
+								     +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>34</left>
-									<top>327</top>
+									<left>40</left>
+									<top>321</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
@@ -1285,12 +1291,14 @@
 								     not depend on a skin setting.
 
 								     Bottom-left because it is the one free corner: these posters already
-								     use top-left for "in your library" and top-right for "watched". The
-								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     use top-left for "in your library" and top-right for "watched". It sits
+								     further in from that corner than either of those, which reads better
+								     over poster art than tucking it flush. The include carries its own
+								     +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>34</left>
-									<top>327</top>
+									<left>40</left>
+									<top>321</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
@@ -1425,12 +1433,14 @@
 								     not depend on a skin setting.
 
 								     Bottom-left because it is the one free corner: these posters already
-								     use top-left for "in your library" and top-right for "watched". The
-								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     use top-left for "in your library" and top-right for "watched". It sits
+								     further in from that corner than either of those, which reads better
+								     over poster art than tucking it flush. The include carries its own
+								     +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>34</left>
-									<top>327</top>
+									<left>40</left>
+									<top>321</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
@@ -1549,12 +1559,14 @@
 								     not depend on a skin setting.
 
 								     Bottom-left because it is the one free corner: these posters already
-								     use top-left for "in your library" and top-right for "watched". The
-								     include carries its own +3/-3 offset, which the coordinates allow for.
+								     use top-left for "in your library" and top-right for "watched". It sits
+								     further in from that corner than either of those, which reads better
+								     over poster art than tucking it flush. The include carries its own
+								     +3/-3 offset, which the coordinates allow for.
 								     Cast, crew and the image grids have no rating and so draw nothing. -->
 								<control type="group">
-									<left>34</left>
-									<top>327</top>
+									<left>40</left>
+									<top>321</top>
 									<include content="UserRatingContent">
 										<param name="infolabel" value="ListItem.Rating" />
 									</include>
