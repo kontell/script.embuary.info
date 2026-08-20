@@ -1,3 +1,15 @@
+v2.4.0
+- Settings are three tabs - General, Filters, Skin - with no headings inside them. Filters is new and holds everything that drops an item from a list; the API keys move into General, and Advanced is gone with its two settings split between the other tabs. Existing settings keep their values.
+- Each API key names its own service. All three were labelled "API key" and read only because of the heading above them, which is no longer there.
+- "Allow items of the next [n] days" sits directly below "Hide upcoming items" and disappears with it rather than greying out. A slider measured in days says nothing at all while nothing is being hidden.
+- The rating and votes filters start switched on, at 4.0 and 5. Both shipped at zero, the value that keeps everything, so neither did anything until you went looking for it. This reaches new installs only: Kodi keeps a stored value over a changed default, so an existing install stays where it is until Defaults is pressed.
+- The votes slider is 0-500 in fives, down from 0-5000 in hundreds, which put the whole useful range in the first tenth of its travel.
+- Opening an actor no longer asks which person you meant when the answer is obvious. TheMovieDB holds near-duplicate stubs for most well-known people, so the chooser was appearing on about a third of cast names. It now appears only when more than one result matches the name exactly and none of them is far better known: on 20 names taken from real cast lists it resolved 18 and got none of them wrong.
+- A name resolved once is remembered, so an actor costs one TheMovieDB search ever rather than one per visit. Kodi stores no id for a person, only their name, which is why this has to be remembered here.
+- New button in General to forget those remembered actors, for when a name was matched to the wrong person.
+- Every toggle on the Skin tab has help text, and installing the context menu add-on now says that Kodi has to be restarted before the entry appears.
+- The rating badge on posters sits further in from the corner.
+
 v2.3.0
 - The add-on is called "Embuary Info" again rather than "Embuary Info (Kontell)". It is still this fork, and the summary and description still say so; the suffix only made the name awkward everywhere Kodi shows it.
 - Person credits: archive footage is recognised in any genre. A film cut around old footage of an actor is not a part they played, and until now only documentaries were checked, although this setting's help text has always promised archive footage.
