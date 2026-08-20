@@ -180,3 +180,25 @@ def test_every_slider_can_reach_its_maximum(setting):
     steps = (high - low) / step
 
     assert abs(steps - round(steps)) < 1e-9
+
+
+@pytest.mark.parametrize(
+    "setting",
+    [s for s in settings() if s.find("./constraints/step") is not None],
+    ids=lambda s: s.get("id"),
+)
+def test_every_slider_starts_on_a_value_it_can_return_to(setting):
+    """A default off the step grid, or outside the range, is a value the user
+    cannot get back to once they have moved the slider: it snaps to the grid on
+    the first nudge and there is no way back short of Defaults.
+    """
+    low = float(setting.find("./constraints/minimum").text)
+    high = float(setting.find("./constraints/maximum").text)
+    step = float(setting.find("./constraints/step").text)
+    default = float(setting.find("default").text)
+
+    assert low <= default <= high
+
+    steps = (default - low) / step
+
+    assert abs(steps - round(steps)) < 1e-9
