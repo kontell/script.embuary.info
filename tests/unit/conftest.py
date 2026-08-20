@@ -104,10 +104,27 @@ _SETTINGS = {
 }
 
 
+""" Where a fake simplecache keeps its database. forget_cache asks
+    xbmcaddon for simplecache's own profile directory, exactly as simplecache
+    does, so a test that wants a real database points this at a tmp_path.
+"""
+SIMPLECACHE_PROFILE = {"path": ""}
+
+
 class _FakeAddon:
+    def __init__(self, addon_id="script.embuary.info"):
+        self.addon_id = addon_id
+
     def getAddonInfo(self, key):
+        if self.addon_id == "script.module.simplecache":
+            return {
+                "id": self.addon_id,
+                "profile": SIMPLECACHE_PROFILE["path"],
+            }.get(key, "")
+
         return {
             "id": "script.embuary.info",
+            "name": "Embuary Info",
             "version": "2.1.0",
             "path": str(ROOT),
         }.get(key, "")
@@ -138,8 +155,14 @@ class _FakeAddon:
 
 
 import xbmcaddon  # noqa: E402  (must follow the sys.modules setup above)
+import xbmcvfs  # noqa: E402
 
 xbmcaddon.Addon = _FakeAddon
+
+""" Kodistubs answers translatePath with an empty string, which would turn
+    every path built from it into the same one.
+"""
+xbmcvfs.translatePath = lambda path: path
 
 import pytest  # noqa: E402
 
