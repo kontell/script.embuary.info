@@ -500,6 +500,8 @@ def _dict_match(get, source, key, value):
 
 
 def _add(items, call):
+    if call in ("movie", "tv"):
+        items = exclude_origins(items, call)
     local_items = get_local_media()
 
     if call == "tv":

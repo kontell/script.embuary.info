@@ -165,6 +165,11 @@
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="reuse_language_invoker" type="boolean" label="32112" help="32113">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
 				<setting id="clear_person_cache" type="action" label="32105" help="32106">
 					<level>0</level>
 					<data>RunScript(script.embuary.info,call=clear_person_cache)</data>
@@ -190,6 +195,101 @@
 					<level>0</level>
 					<default>false</default>
 					<control type="toggle"/>
+				</setting>
+				<setting id="filter_hidden_languages" type="list[string]" label="32115" help="32116">
+					<level>0</level>
+					<default />
+					<constraints>
+						<options>
+							<option label="Arabic (ar)">ar</option>
+							<option label="Basque (eu)">eu</option>
+							<option label="Bengali (bn)">bn</option>
+							<option label="Bulgarian (bg)">bg</option>
+							<option label="Catalan (ca)">ca</option>
+							<option label="Chamorro (ch)">ch</option>
+							<option label="Czech (cs)">cs</option>
+							<option label="Danish (da)">da</option>
+							<option label="Dutch (nl)">nl</option>
+							<option label="English (en)">en</option>
+							<option label="Esperanto (eo)">eo</option>
+							<option label="Finnish (fi)">fi</option>
+							<option label="French (fr)">fr</option>
+							<option label="Georgian (ka)">ka</option>
+							<option label="German (de)">de</option>
+							<option label="Greek (el)">el</option>
+							<option label="Hebrew (he)">he</option>
+							<option label="Hindi (hi)">hi</option>
+							<option label="Hungarian (hu)">hu</option>
+							<option label="Indonesian (id)">id</option>
+							<option label="Italian (it)">it</option>
+							<option label="Japanese (ja)">ja</option>
+							<option label="Kannada (kn)">kn</option>
+							<option label="Korean (ko)">ko</option>
+							<option label="Lithuanian (lt)">lt</option>
+							<option label="Malayalam (ml)">ml</option>
+							<option label="Mandarin (zh)">zh</option>
+							<option label="Norwegian (no)">no</option>
+							<option label="Norwegian Bokmål (nb)">nb</option>
+							<option label="Persian (fa)">fa</option>
+							<option label="Polish (pl)">pl</option>
+							<option label="Portuguese (pt)">pt</option>
+							<option label="Romanian (ro)">ro</option>
+							<option label="Russian (ru)">ru</option>
+							<option label="Serbian (sr)">sr</option>
+							<option label="Slovak (sk)">sk</option>
+							<option label="Slovenian (sl)">sl</option>
+							<option label="Spanish (es)">es</option>
+							<option label="Swedish (sv)">sv</option>
+							<option label="Tamil (ta)">ta</option>
+							<option label="Telugu (te)">te</option>
+							<option label="Thai (th)">th</option>
+							<option label="Turkish (tr)">tr</option>
+							<option label="Ukrainian (uk)">uk</option>
+							<option label="Vietnamese (vi)">vi</option>
+						</options>
+						<delimiter>,</delimiter>
+					</constraints>
+					<control type="list" format="string">
+						<multiselect>true</multiselect>
+					</control>
+				</setting>
+				<setting id="filter_hidden_countries" type="list[string]" label="32117" help="32118">
+					<level>0</level>
+					<default />
+					<constraints>
+						<options>
+							<option label="Australia (AU)">AU</option>
+							<option label="Brazil (BR)">BR</option>
+							<option label="Bulgaria (BG)">BG</option>
+							<option label="Canada (CA)">CA</option>
+							<option label="Denmark (DK)">DK</option>
+							<option label="Finland (FI)">FI</option>
+							<option label="France (FR)">FR</option>
+							<option label="Germany (DE)">DE</option>
+							<option label="Hungary (HU)">HU</option>
+							<option label="India (IN)">IN</option>
+							<option label="Italy (IT)">IT</option>
+							<option label="Lithuania (LT)">LT</option>
+							<option label="Malaysia (MY)">MY</option>
+							<option label="Netherlands (NL)">NL</option>
+							<option label="New Zealand (NZ)">NZ</option>
+							<option label="Norway (NO)">NO</option>
+							<option label="Philippines (PH)">PH</option>
+							<option label="Portugal (PT)">PT</option>
+							<option label="Russia (RU)">RU</option>
+							<option label="Slovakia (SK)">SK</option>
+							<option label="South Korea (KR)">KR</option>
+							<option label="Spain (ES)">ES</option>
+							<option label="Sweden (SE)">SE</option>
+							<option label="Thailand (TH)">TH</option>
+							<option label="United Kingdom (GB)">GB</option>
+							<option label="United States of America (US)">US</option>
+						</options>
+						<delimiter>,</delimiter>
+					</constraints>
+					<control type="list" format="string">
+						<multiselect>true</multiselect>
+					</control>
 				</setting>
 				<setting id="filter_posthumous" type="boolean" label="32092" help="32093">
 					<level>0</level>

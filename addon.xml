@@ -84,6 +84,11 @@
           One consequence for development: copying new files in does not take
           effect while an interpreter is parked with the old modules in
           sys.modules. Disable and re-enable the add-on to discard it.
+
+          The packaged value stays true. The General setting can rewrite this
+          element to false in the installed manifest; service.py restores that
+          choice after an update. Kodi reads it at add-on load, so changing it
+          requires a restart.
         -->
         <reuselanguageinvoker>true</reuselanguageinvoker>
         <platform>all</platform>

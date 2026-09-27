@@ -536,3 +536,38 @@ msgstr ""
 msgctxt "#32111"
 msgid "Home screen button that opens the TheMovieDB search."
 msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32112"
+msgid "Reuse language invoker"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32113"
+msgid "Turn this off if overlapping skin widget requests hang or crash Kodi. Restart Kodi after changing it."
+msgstr ""
+
+#: /service.py
+msgctxt "#32114"
+msgid "Restart Kodi to apply this change"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32115"
+msgid "Hide original languages"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32116"
+msgid "Select languages whose original-language code should be hidden from movie and TV lists. Empty keeps every language."
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32117"
+msgid "Hide countries of origin"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32118"
+msgid "Hide a title when any selected country appears among its production countries (movies) or origin countries (TV). Movie lists may load more slowly the first time because TheMovieDB omits countries from list results. Titles with unknown countries are kept."
+msgstr ""

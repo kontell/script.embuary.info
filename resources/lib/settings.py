@@ -99,6 +99,17 @@ def _string(key):
     return _read("getSettingString", key, "")
 
 
+def _string_list(key):
+    """Read Kodi's comma-delimited list[string] once per launch."""
+    parsed_key = "_parsed_" + key
+    if parsed_key not in _values:
+        raw = _read("getSetting", key, "")
+        _values[parsed_key] = frozenset(
+            part.strip() for part in raw.split(",") if part.strip()
+        )
+    return _values[parsed_key]
+
+
 def _bool(key):
     return _read("getSettingBool", key, False)
 
@@ -122,6 +133,10 @@ def language_code():
 
 def country_code():
     return _string("country_code")
+
+
+def reuse_language_invoker():
+    return _bool("reuse_language_invoker")
 
 
 ########################
@@ -169,6 +184,16 @@ def filter_documentaries():
 def filter_posthumous():
     """Hide credits released after the person died."""
     return _bool("filter_posthumous")
+
+
+def filter_hidden_languages():
+    """Original-language codes hidden in movie and TV lists."""
+    return _string_list("filter_hidden_languages")
+
+
+def filter_hidden_countries():
+    """Origin-country codes hidden in movie and TV lists."""
+    return _string_list("filter_hidden_countries")
 
 
 def filter_rating():

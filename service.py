@@ -3,9 +3,11 @@
 
 ########################
 
+import os
 import xbmc
 
 from resources.lib.helper import *
+from resources.lib.invoker import apply_reuse_invoker
 from resources.lib.nextaired import *
 
 ########################
@@ -38,8 +40,25 @@ def publish_menu_buttons():
 
 class Service(xbmc.Monitor):
     def __init__(self):
+        self._reuse_invoker_enabled = reuse_language_invoker()
+        if self._apply_reuse_invoker() is True:
+            self._notify_invoker_restart()
         while not self.abortRequested():
             self.waitForAbort(100)
+
+    def _notify_invoker_restart(self):
+        DIALOG.notification(
+            ADDON.getAddonInfo("name"),
+            ADDON.getLocalizedString(32114),
+            xbmcgui.NOTIFICATION_INFO,
+        )
+
+    def _apply_reuse_invoker(self):
+        path = os.path.join(addon().getAddonInfo("path"), "addon.xml")
+        changed = apply_reuse_invoker(path, self._reuse_invoker_enabled)
+        if changed is None:
+            log("Could not update reuselanguageinvoker in addon.xml", WARNING)
+        return changed
 
     """ Local library is cached for 24h. This service updates the cache if the library has been changed.
         Since multiple .OnUpdate() callbacks can happen at the same time the refreshing is done by Kodi's AlarmClock function.
@@ -70,6 +89,11 @@ class Service(xbmc.Monitor):
         """
         refresh()
         publish_menu_buttons()
+        enabled = reuse_language_invoker()
+        if enabled != self._reuse_invoker_enabled:
+            self._reuse_invoker_enabled = enabled
+            if self._apply_reuse_invoker() is not None:
+                self._notify_invoker_restart()
 
 
 if __name__ == "__main__":

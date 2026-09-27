@@ -249,6 +249,7 @@ class TMDBVideos(object):
 
             if collection_data["parts"]:
                 set_items = sort_dict(collection_data["parts"], "release_date")
+                candidates = list()
 
                 for item in set_items:
                     if below_thresholds(item):
@@ -260,6 +261,9 @@ class TMDBVideos(object):
                         if diff.days > filter_daydelta():
                             continue
 
+                    candidates.append(item)
+
+                for item in exclude_origins(candidates, "movie"):
                     list_item, is_local = tmdb_handle_movie(item, self.local_movies)
                     li.append(list_item)
 
@@ -280,6 +284,7 @@ class TMDBVideos(object):
 
         if self.movie:
             similar = sort_dict(similar, "release_date", True)
+            candidates = list()
 
             for item in similar:
                 """Filter to hide item if it's part of the collection"""
@@ -299,11 +304,15 @@ class TMDBVideos(object):
                     if diff.days > filter_daydelta():
                         continue
 
+                candidates.append(item)
+
+            for item in exclude_origins(candidates, "movie"):
                 list_item, is_local = tmdb_handle_movie(item, self.local_movies)
                 li.append(list_item)
 
         elif self.tvshow:
             similar = sort_dict(similar, "first_air_date", True)
+            candidates = list()
 
             for item in similar:
                 if below_thresholds(item):
@@ -315,6 +324,9 @@ class TMDBVideos(object):
                     if diff.days > filter_daydelta():
                         continue
 
+                candidates.append(item)
+
+            for item in exclude_origins(candidates, "tv"):
                 list_item, is_local = tmdb_handle_tvshow(item, self.local_shows)
                 li.append(list_item)
 
