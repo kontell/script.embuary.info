@@ -10,7 +10,6 @@ import re
 import stat
 import tempfile
 
-
 REUSE_TAG = re.compile(r"(<reuselanguageinvoker>)(true|false)(</reuselanguageinvoker>)")
 
 
@@ -33,8 +32,11 @@ def apply_reuse_invoker(path, enabled):
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=os.path.dirname(path),
-            prefix=".addon.xml.", delete=False
+            mode="w",
+            encoding="utf-8",
+            dir=os.path.dirname(path),
+            prefix=".addon.xml.",
+            delete=False,
         ) as output:
             temporary = output.name
             output.write(updated)

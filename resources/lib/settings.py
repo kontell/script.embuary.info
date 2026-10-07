@@ -100,14 +100,27 @@ def _string(key):
 
 
 def _string_list(key):
-    """Read Kodi's comma-delimited list[string] once per launch."""
-    parsed_key = "_parsed_" + key
-    if parsed_key not in _values:
-        raw = _read("getSetting", key, "")
-        _values[parsed_key] = frozenset(
-            part.strip() for part in raw.split(",") if part.strip()
-        )
-    return _values[parsed_key]
+    """The values of a list[string] setting, once per successful read.
+
+    list[string] is not a string setting. getSettingString throws on it, so
+    this has to go through getSetting, which is what returns the
+    comma-delimited value. Routing it through _string would leave the setting
+    permanently empty.
+
+    A failed read is not memoised. _read refuses to store one because a dead
+    add-on handle is Kodi unloading the add-on, not an answer, and the next
+    call has to try again. Storing the empty set here would hide that retry
+    and leave every later list in the launch unfiltered.
+    """
+    parsed_key = ("list", key)
+    if parsed_key in _values:
+        return _values[parsed_key]
+
+    raw = _read("getSetting", key, "")
+    parsed = frozenset(part.strip() for part in raw.split(",") if part.strip())
+    if key in _values:
+        _values[parsed_key] = parsed
+    return parsed
 
 
 def _bool(key):

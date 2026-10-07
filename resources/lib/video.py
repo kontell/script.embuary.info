@@ -10,6 +10,7 @@ import xbmcgui
 from collections import OrderedDict
 
 from resources.lib.helper import *
+from resources.lib.origin import exclude_origins
 from resources.lib.tmdb import *
 
 ########################
@@ -100,7 +101,7 @@ class TMDBVideos(object):
         self.tvshow = get_bool(self.call, "tv")
 
         if self.tmdb_id:
-            cache_key = self.call + str(self.tmdb_id)
+            cache_key = details_cache_key(self.call, self.tmdb_id)
             self.details = get_cache(cache_key)
 
             if not self.details:

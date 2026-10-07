@@ -40,9 +40,7 @@ def publish_menu_buttons():
 
 class Service(xbmc.Monitor):
     def __init__(self):
-        self._reuse_invoker_enabled = reuse_language_invoker()
-        if self._apply_reuse_invoker() is True:
-            self._notify_invoker_restart()
+        self._sync_reuse_invoker()
         while not self.abortRequested():
             self.waitForAbort(100)
 
@@ -53,12 +51,20 @@ class Service(xbmc.Monitor):
             xbmcgui.NOTIFICATION_INFO,
         )
 
-    def _apply_reuse_invoker(self):
+    def _sync_reuse_invoker(self):
+        """Rewrite the installed manifest when the setting disagrees with it.
+
+        The file compare is the state. Remembering the setting as well would
+        skip a later retry when the replace failed, and would ask for a
+        restart on a change that never reached the manifest. Notify only when
+        the file itself changed.
+        """
         path = os.path.join(addon().getAddonInfo("path"), "addon.xml")
-        changed = apply_reuse_invoker(path, self._reuse_invoker_enabled)
+        changed = apply_reuse_invoker(path, reuse_language_invoker())
         if changed is None:
             log("Could not update reuselanguageinvoker in addon.xml", WARNING)
-        return changed
+        elif changed:
+            self._notify_invoker_restart()
 
     """ Local library is cached for 24h. This service updates the cache if the library has been changed.
         Since multiple .OnUpdate() callbacks can happen at the same time the refreshing is done by Kodi's AlarmClock function.
@@ -89,11 +95,7 @@ class Service(xbmc.Monitor):
         """
         refresh()
         publish_menu_buttons()
-        enabled = reuse_language_invoker()
-        if enabled != self._reuse_invoker_enabled:
-            self._reuse_invoker_enabled = enabled
-            if self._apply_reuse_invoker() is not None:
-                self._notify_invoker_restart()
+        self._sync_reuse_invoker()
 
 
 if __name__ == "__main__":

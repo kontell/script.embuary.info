@@ -61,7 +61,7 @@ class TMDBSeasons(object):
         return self.result.get(key, "")
 
     def get_tvshow_details(self):
-        tvshow_cache_key = "tv" + str(self.tmdb_id)
+        tvshow_cache_key = details_cache_key("tv", self.tmdb_id)
         tvshow_details = get_cache(tvshow_cache_key)
 
         if not tvshow_details:
