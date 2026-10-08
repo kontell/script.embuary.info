@@ -17,6 +17,7 @@ from xbmcplugin import *
 from datetime import date
 
 from resources.lib.helper import *
+from resources.lib.origin import exclude_origins
 from resources.lib.tmdb import *
 from resources.lib.trakt import *
 from resources.lib.localdb import *
@@ -500,6 +501,8 @@ def _dict_match(get, source, key, value):
 
 
 def _add(items, call):
+    if call in ("movie", "tv"):
+        items = exclude_origins(items, call)
     local_items = get_local_media()
 
     if call == "tv":

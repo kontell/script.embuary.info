@@ -51,6 +51,8 @@ The script provides a selection dialog if multiple results were returned.
 * To get support for Rotten Tomatoes or IMDb ratings it's required to add a own OMDb key in the settings
 * EN is used as default language. It can be changed in the add-on settings, but will still be used if important informations are missing from the result (The Movie DB doesn't have a own fallback logic).
 * US is used as default country locale for certifications. Other supported locales can be set in the add-on settings.
+* **Reuse language invoker** is enabled by default. If overlapping skin widget requests hang or crash Kodi, turn it off under General and restart Kodi. The add-on restores this choice after an update replaces `addon.xml`.
+* **Origin filters** under Filters let you select up to 45 original languages and 26 countries to hide from movie and TV lists. Leave both selections empty to keep everything. Movie country filtering fetches and caches missing production-country details, so the first filtered browse may take longer.
 
 ## Required windows, reserved IDs and properties
 *Important*

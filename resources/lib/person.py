@@ -9,6 +9,7 @@ import xbmc
 import xbmcgui
 
 from resources.lib.helper import *
+from resources.lib.origin import exclude_origins
 from resources.lib.tmdb import *
 
 ########################
@@ -217,6 +218,7 @@ class TMDBPersons(object):
         movies = sort_dict(movies, "release_date", True)
         li = list()
         duplicate_handler = list()
+        candidates = list()
 
         for item in movies:
             skip_movie = False
@@ -235,15 +237,18 @@ class TMDBPersons(object):
                     skip_movie = True
 
             if not skip_movie and item["id"] not in duplicate_handler:
-                list_item, is_local = tmdb_handle_movie(item, self.local_movies)
-                li.append(list_item)
                 duplicate_handler.append(item["id"])
-                item["type"] = "movie"
+                candidates.append(item)
 
-                if is_local:
-                    self.local_movie_count += 1
+        for item in exclude_origins(candidates, "movie"):
+            list_item, is_local = tmdb_handle_movie(item, self.local_movies)
+            li.append(list_item)
+            item["type"] = "movie"
 
-                self.all_credits.append(item)
+            if is_local:
+                self.local_movie_count += 1
+
+            self.all_credits.append(item)
 
         return li
 
@@ -252,6 +257,7 @@ class TMDBPersons(object):
         tvshows = sort_dict(tvshows, "first_air_date", True)
         li = list()
         duplicate_handler = list()
+        candidates = list()
 
         for item in tvshows:
             skip_show = False
@@ -286,16 +292,19 @@ class TMDBPersons(object):
                     skip_show = True
 
             if not skip_show and item["id"] not in duplicate_handler:
-                list_item, is_local = tmdb_handle_tvshow(item, self.local_shows)
-                li.append(list_item)
                 duplicate_handler.append(item["id"])
-                item["type"] = "tvshow"
-                item["release_date"] = item["first_air_date"]
+                candidates.append(item)
 
-                if is_local:
-                    self.local_tv_count += 1
+        for item in exclude_origins(candidates, "tv"):
+            list_item, is_local = tmdb_handle_tvshow(item, self.local_shows)
+            li.append(list_item)
+            item["type"] = "tvshow"
+            item["release_date"] = item["first_air_date"]
 
-                self.all_credits.append(item)
+            if is_local:
+                self.local_tv_count += 1
+
+            self.all_credits.append(item)
 
         return li
 

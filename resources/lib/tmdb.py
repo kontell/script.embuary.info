@@ -261,6 +261,16 @@ def person_id_cache_key(query):
     return PERSON_ID_KEY + _normalise_name(query)
 
 
+def details_cache_key(call, tmdb_id):
+    """Cache key for a movie or TV details payload.
+
+    The video page writes it and the origin filter reads the movie form back,
+    for production countries a list result does not carry. One constructor so
+    the two cannot drift apart.
+    """
+    return str(call) + str(tmdb_id)
+
+
 def unambiguous_person(results, query):
     """The result a person search obviously meant, or None to go on asking.
 

@@ -99,6 +99,30 @@ def _string(key):
     return _read("getSettingString", key, "")
 
 
+def _string_list(key):
+    """The values of a list[string] setting, once per successful read.
+
+    list[string] is not a string setting. getSettingString throws on it, so
+    this has to go through getSetting, which is what returns the
+    comma-delimited value. Routing it through _string would leave the setting
+    permanently empty.
+
+    A failed read is not memoised. _read refuses to store one because a dead
+    add-on handle is Kodi unloading the add-on, not an answer, and the next
+    call has to try again. Storing the empty set here would hide that retry
+    and leave every later list in the launch unfiltered.
+    """
+    parsed_key = ("list", key)
+    if parsed_key in _values:
+        return _values[parsed_key]
+
+    raw = _read("getSetting", key, "")
+    parsed = frozenset(part.strip() for part in raw.split(",") if part.strip())
+    if key in _values:
+        _values[parsed_key] = parsed
+    return parsed
+
+
 def _bool(key):
     return _read("getSettingBool", key, False)
 
@@ -122,6 +146,11 @@ def language_code():
 
 def country_code():
     return _string("country_code")
+
+
+def reuse_language_invoker():
+    """Return None if unreadable so the service preserves the manifest value."""
+    return _read("getSettingBool", "reuse_language_invoker", None)
 
 
 ########################
@@ -169,6 +198,16 @@ def filter_documentaries():
 def filter_posthumous():
     """Hide credits released after the person died."""
     return _bool("filter_posthumous")
+
+
+def filter_hidden_languages():
+    """Original-language codes hidden in movie and TV lists."""
+    return _string_list("filter_hidden_languages")
+
+
+def filter_hidden_countries():
+    """Origin-country codes hidden in movie and TV lists."""
+    return _string_list("filter_hidden_countries")
 
 
 def filter_rating():

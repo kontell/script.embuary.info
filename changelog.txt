@@ -1,36 +1,40 @@
+v2.5.0
+- Settings option to disable resue of language invoker.
+- Filter by country of orign and language.
+
 v2.4.0
-- Settings are three tabs - General, Filters, Skin - with no headings inside them. Filters is new and holds everything that drops an item from a list; the API keys move into General, and Advanced is gone with its two settings split between the other tabs. Existing settings keep their values.
-- Each API key names its own service. All three were labelled "API key" and read only because of the heading above them, which is no longer there.
-- "Allow items of the next [n] days" sits directly below "Hide upcoming items" and disappears with it rather than greying out. A slider measured in days says nothing at all while nothing is being hidden.
-- The rating and votes filters start switched on, at 4.0 and 5. Both shipped at zero, the value that keeps everything, so neither did anything until you went looking for it. This reaches new installs only: Kodi keeps a stored value over a changed default, so an existing install stays where it is until Defaults is pressed.
-- The votes slider is 0-500 in fives, down from 0-5000 in hundreds, which put the whole useful range in the first tenth of its travel.
-- Opening an actor no longer asks which person you meant when the answer is obvious. TheMovieDB holds near-duplicate stubs for most well-known people, so the chooser was appearing on about a third of cast names. It now appears only when more than one result matches the name exactly and none of them is far better known: on 20 names taken from real cast lists it resolved 18 and got none of them wrong.
-- A name resolved once is remembered, so an actor costs one TheMovieDB search ever rather than one per visit. Kodi stores no id for a person, only their name, which is why this has to be remembered here.
-- New button in General to forget those remembered actors, for when a name was matched to the wrong person.
-- Every toggle on the Skin tab has help text, and installing the context menu add-on now says that Kodi has to be restarted before the entry appears.
-- The rating badge on posters sits further in from the corner.
+- Settings are three tabs: General, Filters, and Skin. Each tab is one list. Filters holds the settings that drop items from a list. API keys are on General. The two Advanced settings are on the other tabs. Stored values are kept.
+- API keys are labelled TheMovieDB, OMDb, and Trakt.tv.
+- "Allow items of the next [n] days" is shown only while "Hide upcoming items" is on.
+- A new install starts the rating filter at 4.0 and the votes filter at 5. An existing install keeps its stored values until Defaults is pressed.
+- The votes slider runs from 0 to 500 in steps of 5.
+- The person chooser opens only when more than one result matches the name exactly and none is clearly better known.
+- Resolved actor names are remembered. General has "Forget remembered actors" to clear a wrong match.
+- Every toggle on the Skin tab has help text. Installing the context menu add-on says Kodi must be restarted before the entry appears.
+- The rating badge sits further in from the corner of a poster.
 
 v2.3.0
-- The add-on is called "Embuary Info" again rather than "Embuary Info (Kontell)". It is still this fork, and the summary and description still say so; the suffix only made the name awkward everywhere Kodi shows it.
-- Person credits: archive footage is recognised in any genre. A film cut around old footage of an actor is not a part they played, and until now only documentaries were checked, although this setting's help text has always promised archive footage.
-- New setting to hide items TheMovieDB rates below a chosen score, on a 0-10 slider in steps of 0.1. Something nobody has voted on is kept, because an unrated item's zero is not the same as a bad score.
-- New setting to hide items with fewer TheMovieDB votes than a chosen number, on a 0-5000 slider in steps of 100. This is the one that hides the obscure, since no votes really is fewer than any threshold. On a real list of 156 credits, 106 survive at 100 votes and 57 at 1000.
-- Both new filters apply everywhere the existing ones do: a person's credits, similar titles, and collection members.
-- Less work on every launch: the TLS machinery loads only when a request is actually made, which a page with everything already cached never does. That is 110 ms less on an Android TV box, although the time you actually wait is bounded by Kodi building the window and did not change.
+- Renamed from "Embuary Info (Kontell)" to "Embuary Info". The summary and description still identify this fork.
+- Archive footage is recognised in any genre.
+- New setting to hide items TheMovieDB rates below a chosen score, on a 0-10 slider in steps of 0.1. Unrated items are kept.
+- New setting to hide items with fewer TheMovieDB votes than a chosen number, on a 0-5000 slider in steps of 100.
+- Both filters apply to a person's credits, similar titles, and collection members.
+- TLS is loaded on the first request that needs it.
 
 v2.2.0
-- Settings are now four tabs - General, Skin, API keys, Advanced - with the descriptions moved out of the labels into help text. Existing settings keep their values.
-- Person credits: appearances as themselves are recognised however TheMovieDB spells them. The old check matched only "himself" and "herself", and only when a character was filled in at all, so it caught none of Tom Hanks' 114 documentary credits and 2 of Martin Scorsese's 260. Genuine roles are kept: named voice parts in documentaries stay.
-- Person credits: the same filter now applies to TV, which was never filtered at all.
-- New setting to hide documentaries outright, and one to hide releases the person did not live to see.
-- Posters in the Similar, Collection, Seasons, Movies and TV shows rows show the rating, drawn with the current skin's own badge rather than one of ours, so it matches whatever skin is in use.
-- New Skin tab with a toggle per button a skin offers for this add-on, so In cinemas, In cinemas soon and Next aired can be switched off without editing the skin. Adds a Search button among them.
-- Opening a page is much faster: 1.9s to 0.6s warm and 2.4s to 1.4s cold, measured on a desktop, and proportionally more on the slower devices this runs on. Most of what went was import cost the info dialog paid on every single launch.
-- Fixed: with an OMDb key set, every movie page made three OMDb requests, cached none of them, and never filled in the retail date.
+- Settings are four tabs: General, Skin, API keys, and Advanced. Descriptions are help text. Stored values are kept.
+- Appearances as themselves match any wording TheMovieDB uses. Named voice parts in documentaries are kept.
+- The same credit filters apply to television.
+- New settings to hide documentaries, and to hide releases the person did not live to see.
+- Posters in Similar, Collection, Seasons, Movies, and TV shows show the rating with the current skin's badge.
+- The Skin tab has a toggle for each button a skin offers for this add-on, and adds Search.
+- Opening a page is faster. The info dialog imported its libraries on every launch.
+- Fixed movie pages with an OMDb key set: three requests per page, none of them cached, and an empty retail date.
 
 v2.1.0
-- Fork of sualfred's Embuary Info, based on the unreleased upstream 2.0.10 (20 commits past the released 2.0.8).
-- Fixed unbounded memory growth while browsing. Every page visited in a session stayed resident, so a long session could push Kodi into an out-of-memory kill. Measured on an Android TV box: seven pages held 983 MB of GPU memory and 2.1 GB total, against a 46 MB / 582 MB idle baseline.
-- Artwork is requested at a size the display can actually use instead of TMDb's "original", which Kodi was downscaling anyway. Measured on a real page, opening it downloads 4.0 MB instead of 20.0 MB.
-- Faster page loads: a shared HTTP connection, parallel and time-bounded trailer checks, indexed local-library matching, and several quadratic loops removed.
-- Fixed a crash in date_year() when a date failed to parse, and an inverted error check that reported "not found" when results had in fact been found.
+- Fork of sualfred's Embuary Info, based on unreleased upstream 2.0.10 (20 commits past released 2.0.8).
+- Fixed memory growth while browsing. Pages stayed resident for the session, and a long session could run Kodi out of memory.
+- Artwork is requested at a size the display can use.
+- Faster page loads: a shared HTTP connection, parallel time-bounded trailer checks, and indexed local-library matching.
+- Fixed a crash in date_year() when a date failed to parse.
+- Fixed an error check that reported "not found" when results had been found.
