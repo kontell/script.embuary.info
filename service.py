@@ -59,8 +59,11 @@ class Service(xbmc.Monitor):
         restart on a change that never reached the manifest. Notify only when
         the file itself changed.
         """
+        enabled = reuse_language_invoker()
+        if enabled is None:
+            return
         path = os.path.join(addon().getAddonInfo("path"), "addon.xml")
-        changed = apply_reuse_invoker(path, reuse_language_invoker())
+        changed = apply_reuse_invoker(path, enabled)
         if changed is None:
             log("Could not update reuselanguageinvoker in addon.xml", WARNING)
         elif changed:

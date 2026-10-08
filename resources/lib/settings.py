@@ -149,7 +149,8 @@ def country_code():
 
 
 def reuse_language_invoker():
-    return _bool("reuse_language_invoker")
+    """Return None if unreadable so the service preserves the manifest value."""
+    return _read("getSettingBool", "reuse_language_invoker", None)
 
 
 ########################
